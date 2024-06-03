@@ -1,6 +1,5 @@
 [
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -16,10 +15,12 @@
                 "A": 0,
                 "B": 1875443170982464
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -35,10 +36,12 @@
                 "A": 88739322630080,
                 "B": 1876725096051745
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -54,10 +57,12 @@
                 "A": 235894416821184,
                 "B": 1873305839476414
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -73,10 +78,12 @@
                 "A": 106270057837888,
                 "B": 1874403645842739
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -92,10 +99,12 @@
                 "A": 0,
                 "B": 2814748359731
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -111,10 +120,12 @@
                 "A": 1091447886596216,
                 "B": 1834716561142572
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -130,10 +141,12 @@
                 "A": 164724635005760,
                 "B": 1875443170982464
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -149,10 +162,12 @@
                 "A": 88026150692032,
                 "B": 1878016993404429
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -168,10 +183,12 @@
                 "A": 75227658897792,
                 "B": 1893961094774844
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -187,10 +204,12 @@
                 "A": 0,
                 "B": 280064065686981
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -206,10 +225,12 @@
                 "A": 4695920507737,
                 "B": 274691450305115
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -225,10 +246,12 @@
                 "A": 0,
                 "B": 422212465065984
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -244,10 +267,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -263,10 +288,12 @@
                 "A": 14074804452,
                 "B": 422212465065984
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 6,
         "orders": [
@@ -282,10 +309,12 @@
                 "A": 0,
                 "B": 281460902609959
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 6,
         "orders": [
@@ -301,10 +330,12 @@
                 "A": 126755673936,
                 "B": 281207448346389
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 6,
         "orders": [
@@ -320,10 +351,12 @@
                 "A": 16901673043433,
                 "B": 264601449757659
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 6,
         "orders": [
@@ -339,10 +372,12 @@
                 "A": 0,
                 "B": 281376512159682
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 6,
         "orders": [
@@ -358,10 +393,12 @@
                 "A": 0,
                 "B": 281334344687532
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -377,10 +414,12 @@
                 "A": 0,
                 "B": 5897800738913900
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -396,10 +435,12 @@
                 "A": 3822814038205952,
                 "B": 5896589440607106
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -415,10 +456,12 @@
                 "A": 3076021011652608,
                 "B": 5897666420405006
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -434,10 +477,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -453,10 +498,12 @@
                 "A": 32676704,
                 "B": 12106696520
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -472,10 +519,12 @@
                 "A": 0,
                 "B": 12365692607
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -491,10 +540,12 @@
                 "A": 93278858,
                 "B": 12269209786
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -510,10 +561,12 @@
                 "A": 3368189479,
                 "B": 8901020307
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -529,10 +582,12 @@
                 "A": 0,
                 "B": 10550619334
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -548,10 +603,12 @@
                 "A": 325482628,
                 "B": 12008132901
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -567,10 +624,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -586,10 +645,12 @@
                 "A": 0,
                 "B": 12119777774
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -605,10 +666,12 @@
                 "A": 336461286,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -624,10 +687,12 @@
                 "A": 0,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -643,10 +708,12 @@
                 "A": 847697452,
                 "B": 11258999068
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -662,10 +729,12 @@
                 "A": 336461286,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -681,10 +750,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -700,10 +771,12 @@
                 "A": 149183794,
                 "B": 13202346667
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -719,10 +792,12 @@
                 "A": 0,
                 "B": 12132844924
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -738,10 +813,12 @@
                 "A": 0,
                 "B": 12041077086
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -757,10 +834,12 @@
                 "A": 0,
                 "B": 12090325050
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -776,10 +855,12 @@
                 "A": 0,
                 "B": 11975098085
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -795,10 +876,12 @@
                 "A": 0,
                 "B": 12106696520
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -814,10 +897,12 @@
                 "A": 162513266,
                 "B": 12106696520
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -833,10 +918,12 @@
                 "A": 0,
                 "B": 12587943637
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -852,10 +939,12 @@
                 "A": 0,
                 "B": 11895440229
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -871,10 +960,12 @@
                 "A": 52100553,
                 "B": 12139373224
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -890,10 +981,12 @@
                 "A": 0,
                 "B": 11774943074
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -909,10 +1002,12 @@
                 "A": 0,
                 "B": 12139373224
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -928,10 +1023,12 @@
                 "A": 0,
                 "B": 12587943637
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -947,10 +1044,12 @@
                 "A": 0,
                 "B": 11374514907
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -966,10 +1065,12 @@
                 "A": 0,
                 "B": 11639594404
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -985,10 +1086,12 @@
                 "A": 0,
                 "B": 12207709599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1004,10 +1107,12 @@
                 "A": 0,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1023,10 +1128,12 @@
                 "A": 0,
                 "B": 12139373224
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1042,10 +1149,12 @@
                 "A": 169432475,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1061,10 +1170,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1080,10 +1191,12 @@
                 "A": 148353165,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1099,10 +1212,12 @@
                 "A": 10220955,
                 "B": 13621689681
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1118,10 +1233,12 @@
                 "A": 164724635,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1137,10 +1254,12 @@
                 "A": 472515459,
                 "B": 11081680914
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1156,10 +1275,12 @@
                 "A": 0,
                 "B": 11734502394
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1175,10 +1296,12 @@
                 "A": 84531001,
                 "B": 11673578693
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1194,10 +1317,12 @@
                 "A": 336461286,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1213,10 +1338,12 @@
                 "A": 0,
                 "B": 12323976125
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1232,10 +1359,12 @@
                 "A": 0,
                 "B": 11537040912
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1251,10 +1380,12 @@
                 "A": 327237901,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1270,10 +1401,12 @@
                 "A": 0,
                 "B": 12204464163
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1289,10 +1422,12 @@
                 "A": 1300589761,
                 "B": 11258999068
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1308,10 +1443,12 @@
                 "A": 1508419854,
                 "B": 9750579214
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1327,10 +1464,12 @@
                 "A": 0,
                 "B": 12236879796
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1346,10 +1485,12 @@
                 "A": 0,
                 "B": 11958546455
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1365,10 +1506,12 @@
                 "A": 0,
                 "B": 744712788
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1384,10 +1527,12 @@
                 "A": 0,
                 "B": 12155678635
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1403,10 +1548,12 @@
                 "A": 0,
                 "B": 12123045882
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1422,10 +1569,12 @@
                 "A": 160388634,
                 "B": 12269209786
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1441,10 +1590,12 @@
                 "A": 0,
                 "B": 12269209786
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1460,10 +1611,12 @@
                 "A": 0,
                 "B": 13469687901
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1479,10 +1632,12 @@
                 "A": 0,
                 "B": 10901478971
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1498,10 +1653,12 @@
                 "A": 0,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1517,10 +1674,12 @@
                 "A": 79933938,
                 "B": 12349664482
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1536,10 +1695,12 @@
                 "A": 0,
                 "B": 12011431385
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1555,10 +1716,12 @@
                 "A": 280058387,
                 "B": 12024616276
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1574,10 +1737,12 @@
                 "A": 12656044,
                 "B": 12656037350
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1593,10 +1758,12 @@
                 "A": 0,
                 "B": 16789693333
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1612,10 +1779,12 @@
                 "A": 0,
                 "B": 11858751555
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1631,10 +1800,12 @@
                 "A": 0,
                 "B": 10995552555
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1650,10 +1821,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1669,10 +1842,12 @@
                 "A": 66161016,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1688,10 +1863,12 @@
                 "A": 66161016,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1707,10 +1884,12 @@
                 "A": 0,
                 "B": 12014728964
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1726,10 +1905,12 @@
                 "A": 336461286,
                 "B": 11605510599
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1745,10 +1926,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1764,10 +1947,12 @@
                 "A": 0,
                 "B": 11908753541
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1783,10 +1968,12 @@
                 "A": 0,
                 "B": 12682001809
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1802,10 +1989,12 @@
                 "A": 0,
                 "B": 11526735380
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1821,10 +2010,12 @@
                 "A": 0,
                 "B": 11895440229
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1840,10 +2031,12 @@
                 "A": 0,
                 "B": 12106696520
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1859,10 +2052,12 @@
                 "A": 112165687,
                 "B": 11598681818
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1878,10 +2073,12 @@
                 "A": 549851656,
                 "B": 10531829258
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1897,10 +2094,12 @@
                 "A": 6656656,
                 "B": 11898769952
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1916,10 +2115,12 @@
                 "A": 0,
                 "B": 11199025906
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1935,10 +2136,12 @@
                 "A": 0,
                 "B": 12663246066
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1954,10 +2157,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1973,10 +2178,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -1992,10 +2199,12 @@
                 "A": 150888917,
                 "B": 13051457750
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2011,10 +2220,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2030,10 +2241,12 @@
                 "A": 57818469,
                 "B": 13674006857
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2049,10 +2262,12 @@
                 "A": 0,
                 "B": 16291542113
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2068,10 +2283,12 @@
                 "A": 864370565,
                 "B": 13202346667
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2087,10 +2304,12 @@
                 "A": 15685990,
                 "B": 15144818601
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2106,10 +2325,12 @@
                 "A": 490041307,
                 "B": 15922629181
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2125,10 +2346,12 @@
                 "A": 148281031,
                 "B": 15133673405
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2144,10 +2367,12 @@
                 "A": 127944264,
                 "B": 15417019411
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2163,10 +2388,12 @@
                 "A": 139390008,
                 "B": 16982064407
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2182,10 +2409,12 @@
                 "A": 0,
                 "B": 281334204
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -2201,10 +2430,12 @@
                 "A": 0,
                 "B": 5819312065461623
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2220,10 +2451,12 @@
                 "A": 4727831122555552,
                 "B": 5860531989906363
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2239,10 +2472,12 @@
                 "A": 4697383125322624,
                 "B": 6071395379309237
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2258,10 +2493,12 @@
                 "A": 0,
                 "B": 6082822702171796
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2277,10 +2514,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2296,10 +2535,12 @@
                 "A": 0,
                 "B": 6063929807463604
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2315,10 +2556,12 @@
                 "A": 0,
                 "B": 5897934990213120
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2334,10 +2577,12 @@
                 "A": 0,
                 "B": 5795656910148557
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2353,10 +2598,12 @@
                 "A": 0,
                 "B": 6113776788327848
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2372,10 +2619,12 @@
                 "A": 4961497568021296,
                 "B": 6082527659480557
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2391,10 +2640,12 @@
                 "A": 0,
                 "B": 6089219920240955
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2410,10 +2661,12 @@
                 "A": 4947790025552000,
                 "B": 6060408646885202
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2429,10 +2682,12 @@
                 "A": 4934626889212288,
                 "B": 6056288658238123
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2448,10 +2703,12 @@
                 "A": 0,
                 "B": 6061034492720564
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2467,10 +2724,12 @@
                 "A": 0,
                 "B": 6064328648548878
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2486,10 +2745,12 @@
                 "A": 0,
                 "B": 6058032079864689
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2505,10 +2766,12 @@
                 "A": 4983515678459920,
                 "B": 6063163109419823
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2524,10 +2787,12 @@
                 "A": 0,
                 "B": 6068358068873369
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2543,10 +2808,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2562,10 +2829,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2581,10 +2850,12 @@
                 "A": 0,
                 "B": 11258999068
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2600,10 +2871,12 @@
                 "A": 0,
                 "B": 11290620597
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2619,10 +2892,12 @@
                 "A": 515944006,
                 "B": 11258999068
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2638,10 +2913,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2657,10 +2934,12 @@
                 "A": 0,
                 "B": 12171962204
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2676,10 +2955,12 @@
                 "A": 0,
                 "B": 11117370800
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2695,10 +2976,12 @@
                 "A": 0,
                 "B": 12008132901
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2714,10 +2997,12 @@
                 "A": 181073997,
                 "B": 11941971885
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2733,10 +3018,12 @@
                 "A": 0,
                 "B": 12272438100
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2752,10 +3039,12 @@
                 "A": 195373182,
                 "B": 11398867773
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2771,10 +3060,12 @@
                 "A": 167028811,
                 "B": 11774943074
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2790,10 +3081,12 @@
                 "A": 101364381,
                 "B": 11673578693
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2809,10 +3102,12 @@
                 "A": 0,
                 "B": 13127119008
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2828,10 +3123,12 @@
                 "A": 15760634,
                 "B": 13235004853
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2847,10 +3144,12 @@
                 "A": 126253607,
                 "B": 13115042539
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2866,10 +3165,12 @@
                 "A": 5909117,
                 "B": 13404830195
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2885,10 +3186,12 @@
                 "A": 0,
                 "B": 15270141624
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2904,10 +3207,12 @@
                 "A": 0,
                 "B": 14760672305
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2923,10 +3228,12 @@
                 "A": 119804493,
                 "B": 16472900673
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2942,10 +3249,12 @@
                 "A": 961648879,
                 "B": 15922629181
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -2961,10 +3270,12 @@
                 "A": 836467455,
                 "B": 13789401366
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -2980,10 +3291,12 @@
                 "A": 0,
                 "B": 1875960767845615
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -2999,10 +3312,12 @@
                 "A": 0,
                 "B": 427071836630922
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3018,10 +3333,12 @@
                 "A": 0,
                 "B": 427224937513865
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3037,10 +3354,12 @@
                 "A": 0,
                 "B": 429081699766967
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3056,10 +3375,12 @@
                 "A": 0,
                 "B": 427071836630922
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3075,10 +3396,12 @@
                 "A": 0,
                 "B": 40847
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3094,10 +3417,12 @@
                 "A": 16826,
                 "B": 344735
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3113,10 +3438,12 @@
                 "A": 0,
                 "B": 349301
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3132,10 +3459,12 @@
                 "A": 0,
                 "B": 281474
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3151,10 +3480,12 @@
                 "A": 35462792969,
                 "B": 4450510153742
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3170,10 +3501,12 @@
                 "A": 116541993865,
                 "B": 4360591588697
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3189,10 +3522,12 @@
                 "A": 0,
                 "B": 3879864801473
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3208,10 +3543,12 @@
                 "A": 188537006836,
                 "B": 4107992041805
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3227,10 +3564,12 @@
                 "A": 0,
                 "B": 4305739196507
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3246,10 +3585,12 @@
                 "A": 0,
                 "B": 4305739196507
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3265,10 +3606,12 @@
                 "A": 0,
                 "B": 4875289607221
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3284,10 +3627,12 @@
                 "A": 885362785190,
                 "B": 5637937459809
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3303,10 +3648,12 @@
                 "A": 122211840986,
                 "B": 4245612257675
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3322,10 +3669,12 @@
                 "A": 0,
                 "B": 1556333024583373
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3341,10 +3690,12 @@
                 "A": 0,
                 "B": 1625510896765293
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3360,10 +3711,12 @@
                 "A": 0,
                 "B": 1551238742919704
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3379,10 +3732,12 @@
                 "A": 1007486702104786,
                 "B": 1341359303187275
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3398,10 +3753,12 @@
                 "A": 520131008758552,
                 "B": 1404056791451537
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3417,10 +3774,12 @@
                 "A": 490180602556808,
                 "B": 1403499920253133
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3436,10 +3795,12 @@
                 "A": 0,
                 "B": 1548301910034222
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3455,10 +3816,12 @@
                 "A": 0,
                 "B": 1560108090863556
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3474,10 +3837,12 @@
                 "A": 0,
                 "B": 1560992044049357
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 8,
         "orders": [
@@ -3493,10 +3858,12 @@
                 "A": 0,
                 "B": 28147497671065
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3512,10 +3879,12 @@
                 "A": 422256493705712,
                 "B": 1578842303003821
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3531,10 +3900,12 @@
                 "A": 0,
                 "B": 1551909440538593
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3550,10 +3921,12 @@
                 "A": 67479575262656,
                 "B": 1589774550646711
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3569,10 +3942,12 @@
                 "A": 270907149576928,
                 "B": 1580671310638603
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3588,10 +3963,12 @@
                 "A": 103321412857472,
                 "B": 1585482192518094
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -3607,10 +3984,12 @@
                 "A": 54250689295040,
                 "B": 1634716029499553
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3626,10 +4005,12 @@
                 "A": 18996714668468,
                 "B": 199032864766430
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3645,10 +4026,12 @@
                 "A": 27237657162642,
                 "B": 235498861483415
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3664,10 +4047,12 @@
                 "A": 23850212032037,
                 "B": 154170194117667
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3683,10 +4068,12 @@
                 "A": 198833981052026,
                 "B": 199032864766430
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3702,10 +4089,12 @@
                 "A": 0,
                 "B": 235498861483415
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3721,10 +4110,12 @@
                 "A": 11083683461932,
                 "B": 425114574273757
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3740,10 +4131,12 @@
                 "A": 13683045595446,
                 "B": 222525507687130
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3759,10 +4152,12 @@
                 "A": 15893791798581,
                 "B": 166522841916634
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3778,10 +4173,12 @@
                 "A": 21012458616726,
                 "B": 178020406149704
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3797,10 +4194,12 @@
                 "A": 48911975044060,
                 "B": 178020406149704
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3816,10 +4215,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3835,10 +4236,12 @@
                 "A": 32103238,
                 "B": 132023466
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3854,10 +4257,12 @@
                 "A": 7087840,
                 "B": 164126704
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3873,10 +4278,12 @@
                 "A": 7457603,
                 "B": 208747429
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3892,10 +4299,12 @@
                 "A": 0,
                 "B": 206841020
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -3911,10 +4320,12 @@
                 "A": 52376792,
                 "B": 178020406
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3930,10 +4341,12 @@
                 "A": 74029518581747,
                 "B": 219838984563023
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -3949,10 +4362,12 @@
                 "A": 58705469968,
                 "B": 1320234666636
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3968,10 +4383,12 @@
                 "A": 824421119442,
                 "B": 1990328647664
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -3987,10 +4404,12 @@
                 "A": 0,
                 "B": 2686575069
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4006,10 +4425,12 @@
                 "A": 0,
                 "B": 166522841916
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4025,10 +4446,12 @@
                 "A": 0,
                 "B": 173512828792
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4044,10 +4467,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4063,10 +4488,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4082,10 +4509,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4101,10 +4530,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4120,10 +4551,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4139,10 +4572,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4158,10 +4593,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4177,10 +4614,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4196,10 +4635,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4215,10 +4656,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4234,10 +4677,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4253,10 +4698,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4272,10 +4719,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4291,10 +4740,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4310,10 +4761,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4329,10 +4782,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4348,10 +4803,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4367,10 +4824,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4386,10 +4845,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4405,10 +4866,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4424,10 +4887,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4443,10 +4908,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4462,10 +4929,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4481,10 +4950,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4500,10 +4971,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4519,10 +4992,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4538,10 +5013,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4557,10 +5034,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4576,10 +5055,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4595,10 +5076,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4614,10 +5097,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4633,10 +5118,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4652,10 +5139,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4671,10 +5160,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4690,10 +5181,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4709,10 +5202,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4728,10 +5223,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4747,10 +5244,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4766,10 +5265,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4785,10 +5286,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4804,10 +5307,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4823,10 +5328,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4842,10 +5349,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4861,10 +5370,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4880,10 +5391,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4899,10 +5412,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4918,10 +5433,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -4937,10 +5454,12 @@
                 "A": 0,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -4956,10 +5475,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -4975,10 +5496,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -4994,10 +5517,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5013,10 +5538,12 @@
                 "A": 20981930,
                 "B": 744712788
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5032,10 +5559,12 @@
                 "A": 7645157,
                 "B": 773416205
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5051,10 +5580,12 @@
                 "A": 42444919,
                 "B": 912083168
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5070,10 +5601,12 @@
                 "A": 64597175,
                 "B": 1194197188
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -5089,10 +5622,12 @@
                 "A": 55242720,
                 "B": 689470068
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5108,10 +5643,12 @@
                 "A": 27993069,
                 "B": 701206927
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5127,10 +5664,12 @@
                 "A": 0,
                 "B": 663442882
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -5146,10 +5685,12 @@
                 "A": 0,
                 "B": 717623199
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5165,10 +5706,12 @@
                 "A": 0,
                 "B": 721968081
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5184,10 +5727,12 @@
                 "A": 8119874,
                 "B": 692943491
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5203,10 +5748,12 @@
                 "A": 5309989,
                 "B": 692943491
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5222,10 +5769,12 @@
                 "A": 0,
                 "B": 718431890
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -5241,10 +5790,12 @@
                 "A": 0,
                 "B": 732916735
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5260,10 +5811,12 @@
                 "A": 49209092,
                 "B": 663442882
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5279,10 +5832,12 @@
                 "A": 0,
                 "B": 664181272
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5298,10 +5853,12 @@
                 "A": 0,
                 "B": 705037227
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -5317,10 +5874,12 @@
                 "A": 0,
                 "B": 703687441
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -5336,10 +5895,12 @@
                 "A": 0,
                 "B": 704193914
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5355,10 +5916,12 @@
                 "A": 0,
                 "B": 703687441
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5374,10 +5937,12 @@
                 "A": 0,
                 "B": 631866284
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -5393,10 +5958,12 @@
                 "A": 29855577,
                 "B": 590292689
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5412,10 +5979,12 @@
                 "A": 331536,
                 "B": 662574878
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -5431,10 +6000,12 @@
                 "A": 168240307215872,
                 "B": 1551909440538593
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -5450,10 +6021,12 @@
                 "A": 0,
                 "B": 1549188527645502
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -5469,10 +6042,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -5488,10 +6063,12 @@
                 "A": 11223145838304,
                 "B": 1627804342886535
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -5507,10 +6084,12 @@
                 "A": 27548016818688,
                 "B": 1631632133371359
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -5526,10 +6105,12 @@
                 "A": 1002503361642560,
                 "B": 2210109140007279
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5545,10 +6126,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5564,10 +6147,12 @@
                 "A": 0,
                 "B": 39806572
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5583,10 +6168,12 @@
                 "A": 0,
                 "B": 515183796
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5602,10 +6189,12 @@
                 "A": 0,
                 "B": 511324687
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5621,10 +6210,12 @@
                 "A": 10938555,
                 "B": 537757187
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5640,10 +6231,12 @@
                 "A": 0,
                 "B": 267030609
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5659,10 +6252,12 @@
                 "A": 46278427,
                 "B": 1688849860
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5678,10 +6273,12 @@
                 "A": 4298139552137,
                 "B": 274347871120865
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5697,10 +6294,12 @@
                 "A": 1331251905142,
                 "B": 24598078728255
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5716,10 +6315,12 @@
                 "A": 2034139056268,
                 "B": 18457548559094
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5735,10 +6336,12 @@
                 "A": 1533209099423,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5754,10 +6357,12 @@
                 "A": 1325777918934,
                 "B": 24376448036106
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5773,10 +6378,12 @@
                 "A": 1347608241728,
                 "B": 19903286476643
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5792,10 +6399,12 @@
                 "A": 0,
                 "B": 2457499603880843
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5811,10 +6420,12 @@
                 "A": 0,
                 "B": 218029579
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5830,10 +6441,12 @@
                 "A": 0,
                 "B": 2442240813967327
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5849,10 +6462,12 @@
                 "A": 0,
                 "B": 422212465065984
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5868,10 +6483,12 @@
                 "A": 0,
                 "B": 276008922853021
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5887,10 +6504,12 @@
                 "A": 0,
                 "B": 11537040912814
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -5906,10 +6525,12 @@
                 "A": 95247358,
                 "B": 12429598420
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -5925,10 +6546,12 @@
                 "A": 3841541776056576,
                 "B": 5548903258865350
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5944,10 +6567,12 @@
                 "A": 0,
                 "B": 703687441776640
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5963,10 +6588,12 @@
                 "A": 8319388976480,
                 "B": 729163250930037
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -5982,10 +6609,12 @@
                 "A": 0,
                 "B": 10050667003024
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6001,10 +6630,12 @@
                 "A": 0,
                 "B": 1462586882166
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6020,10 +6651,12 @@
                 "A": 0,
                 "B": 280064065686981
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6039,10 +6672,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6058,10 +6693,12 @@
                 "A": 1641510,
                 "B": 280614882
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -6077,10 +6714,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6096,10 +6735,12 @@
                 "A": 0,
                 "B": 16169506371471
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6115,10 +6756,12 @@
                 "A": 0,
                 "B": 16169506371471
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6134,10 +6777,12 @@
                 "A": 29072992434,
                 "B": 19061488748007
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6153,10 +6798,12 @@
                 "A": 0,
                 "B": 21101238668148
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6172,10 +6819,12 @@
                 "A": 0,
                 "B": 17102934719008
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6191,10 +6840,12 @@
                 "A": 0,
                 "B": 154170194
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6210,10 +6861,12 @@
                 "A": 2917414,
                 "B": 290478902
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6229,10 +6882,12 @@
                 "A": 0,
                 "B": 430922020886079
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6248,10 +6903,12 @@
                 "A": 4958899,
                 "B": 237175031
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6267,10 +6924,12 @@
                 "A": 347793,
                 "B": 227629562
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6286,10 +6945,12 @@
                 "A": 2540334,
                 "B": 266118988
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6305,10 +6966,12 @@
                 "A": 100594940936255,
                 "B": 237175031116531
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6324,10 +6987,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6343,10 +7008,12 @@
                 "A": 0,
                 "B": 13499065663326
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6362,10 +7029,12 @@
                 "A": 0,
                 "B": 281052447110359
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6381,10 +7050,12 @@
                 "A": 0,
                 "B": 733875039137642
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6400,10 +7071,12 @@
                 "A": 0,
                 "B": 66011733
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6419,10 +7092,12 @@
                 "A": 310860233,
                 "B": 12587943637
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -6438,10 +7113,12 @@
                 "A": 0,
                 "B": 3027669278273452
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6457,10 +7134,12 @@
                 "A": 0,
                 "B": 1665228419166
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6476,10 +7155,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6495,10 +7176,12 @@
                 "A": 0,
                 "B": 41749485928737
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6514,10 +7197,12 @@
                 "A": 0,
                 "B": 9151183954963
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6533,10 +7218,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6552,10 +7239,12 @@
                 "A": 0,
                 "B": 97505
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6571,10 +7260,12 @@
                 "A": 29352735,
                 "B": 660117333
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6590,10 +7281,12 @@
                 "A": 0,
                 "B": 89010203
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -6609,10 +7302,12 @@
                 "A": 111899136,
                 "B": 616680776
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6628,10 +7323,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6647,10 +7344,12 @@
                 "A": 0,
                 "B": 514861698116473
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6666,10 +7365,12 @@
                 "A": 28605233,
                 "B": 19903286
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6685,10 +7386,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6704,10 +7407,12 @@
                 "A": 221151841098,
                 "B": 17802040614970
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6723,10 +7428,12 @@
                 "A": 91933152437035,
                 "B": 272900114993395
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6742,10 +7449,12 @@
                 "A": 175033761,
                 "B": 867564143
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6761,10 +7470,12 @@
                 "A": 116551602,
                 "B": 689470068
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6780,10 +7491,12 @@
                 "A": 59941261,
                 "B": 796131459
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6799,10 +7512,12 @@
                 "A": 131895556,
                 "B": 1198501809
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6818,10 +7533,12 @@
                 "A": 131895556,
                 "B": 1198501809
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -6837,10 +7554,12 @@
                 "A": 8822601752766,
                 "B": 62939718189019
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -6856,10 +7575,12 @@
                 "A": 21913926715434,
                 "B": 97505792144424
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6875,10 +7596,12 @@
                 "A": 12590463,
                 "B": 308340388
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6894,10 +7617,12 @@
                 "A": 0,
                 "B": 281474976
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6913,10 +7638,12 @@
                 "A": 33910701,
                 "B": 282878850
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6932,10 +7659,12 @@
                 "A": 0,
                 "B": 451238714
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6951,10 +7680,12 @@
                 "A": 93861239118,
                 "B": 1641267048802
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -6970,10 +7701,12 @@
                 "A": 830087488546,
                 "B": 1780204061497
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -6989,10 +7722,12 @@
                 "A": 8180665,
                 "B": 274347871
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7008,10 +7743,12 @@
                 "A": 699343,
                 "B": 56294995
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7027,10 +7764,12 @@
                 "A": 0,
                 "B": 15671863443580
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7046,10 +7785,12 @@
                 "A": 0,
                 "B": 16924582675920
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7065,10 +7806,12 @@
                 "A": 0,
                 "B": 32461277877491
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7084,10 +7827,12 @@
                 "A": 0,
                 "B": 32216283599087
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7103,10 +7848,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7122,10 +7869,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -7141,10 +7890,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7160,10 +7911,12 @@
                 "A": 4790187582350,
                 "B": 424999616594226
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7179,10 +7932,12 @@
                 "A": 4170429127142,
                 "B": 422914402030655
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7198,10 +7953,12 @@
                 "A": 441188629542,
                 "B": 425352957785920
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7217,10 +7974,12 @@
                 "A": 1237567498278,
                 "B": 425565563130911
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7236,10 +7995,12 @@
                 "A": 0,
                 "B": 425189445062038
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7255,10 +8016,12 @@
                 "A": 0,
                 "B": 199032864766430
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7274,10 +8037,12 @@
                 "A": 0,
                 "B": 65105350736426
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7293,10 +8058,12 @@
                 "A": 0,
                 "B": 11778306863147
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7312,10 +8079,12 @@
                 "A": 0,
                 "B": 423840206370747
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7331,10 +8100,12 @@
                 "A": 0,
                 "B": 423919114603035
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7350,10 +8121,12 @@
                 "A": 137384694020,
                 "B": 2814749767106
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7369,10 +8142,12 @@
                 "A": 369963,
                 "B": 27440562
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7388,10 +8163,12 @@
                 "A": 0,
                 "B": 164126704880
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7407,10 +8184,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7426,10 +8205,12 @@
                 "A": 20433334,
                 "B": 36699846
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7445,10 +8226,12 @@
                 "A": 0,
                 "B": 62939718186
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7464,10 +8247,12 @@
                 "A": 1853599217686804,
                 "B": 1864771720708096
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7483,10 +8268,12 @@
                 "A": 1955758048604772,
                 "B": 1885536479604622
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7502,10 +8289,12 @@
                 "A": 0,
                 "B": 6421702156646
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -7521,10 +8310,12 @@
                 "A": 0,
                 "B": 3824708776862184
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7540,10 +8331,12 @@
                 "A": 0,
                 "B": 462510582
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 10,
         "tkn1_decimals": 18,
         "orders": [
@@ -7559,10 +8352,12 @@
                 "A": 0,
                 "B": 2144866896817738
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 10,
         "tkn1_decimals": 18,
         "orders": [
@@ -7578,10 +8373,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -7597,10 +8394,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7616,10 +8415,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -7635,10 +8436,12 @@
                 "A": 6076876746517352,
                 "B": 5897934990213120
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7654,10 +8457,12 @@
                 "A": 14790,
                 "B": 796131
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -7673,10 +8478,12 @@
                 "A": 0,
                 "B": 2696228942315501
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -7692,10 +8499,12 @@
                 "A": 1381252234741504,
                 "B": 2531668182481780
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7711,10 +8520,12 @@
                 "A": 189819445889,
                 "B": 4078959932139
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7730,10 +8541,12 @@
                 "A": 574683172206,
                 "B": 13499065663326
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7749,10 +8562,12 @@
                 "A": 574683172206,
                 "B": 13499065663326
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7768,10 +8583,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7787,10 +8604,12 @@
                 "A": 0,
                 "B": 32649762691529
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7806,10 +8625,12 @@
                 "A": 0,
                 "B": 154170194
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7825,10 +8646,12 @@
                 "A": 0,
                 "B": 6418617024516
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7844,10 +8667,12 @@
                 "A": 0,
                 "B": 424861545720628
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -7863,10 +8688,12 @@
                 "A": 0,
                 "B": 7176231994178
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7882,10 +8709,12 @@
                 "A": 39455875,
                 "B": 281474976
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -7901,10 +8730,12 @@
                 "A": 37832237,
                 "B": 295213446
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7920,10 +8751,12 @@
                 "A": 109062342843,
                 "B": 562949953421
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7939,10 +8772,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7958,10 +8793,12 @@
                 "A": 6293991488,
                 "B": 1255643434273
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7977,10 +8814,12 @@
                 "A": 0,
                 "B": 1160551059946
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -7996,10 +8835,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8015,10 +8856,12 @@
                 "A": 0,
                 "B": 288426022820
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8034,10 +8877,12 @@
                 "A": 0,
                 "B": 295213446112
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8053,10 +8898,12 @@
                 "A": 0,
                 "B": 281474976710
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8072,10 +8919,12 @@
                 "A": 4932993,
                 "B": 34473503
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8091,10 +8940,12 @@
                 "A": 1079874841735,
                 "B": 17802040614970
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8110,10 +8961,12 @@
                 "A": 26070485,
                 "B": 62939718
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8129,10 +8982,12 @@
                 "A": 229951284662,
                 "B": 3330456838332
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8148,10 +9003,12 @@
                 "A": 8265614,
                 "B": 235498860
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8167,10 +9024,12 @@
                 "A": 0,
                 "B": 207986962
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8186,10 +9045,12 @@
                 "A": 15842147,
                 "B": 242133930
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8205,10 +9066,12 @@
                 "A": 12146907,
                 "B": 257105820
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8224,10 +9087,12 @@
                 "A": 6829721,
                 "B": 112589990
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8243,10 +9108,12 @@
                 "A": 32413840,
                 "B": 350433519
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8262,10 +9129,12 @@
                 "A": 33546099,
                 "B": 349301260
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8281,10 +9150,12 @@
                 "A": 231022833679,
                 "B": 2302251956716
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8300,10 +9171,12 @@
                 "A": 1034312,
                 "B": 3504335
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -8319,10 +9192,12 @@
                 "A": 20602064997,
                 "B": 143524639883
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8338,10 +9213,12 @@
                 "A": 8132558,
                 "B": 93354688
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8357,10 +9234,12 @@
                 "A": 3372930,
                 "B": 21802957
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8376,10 +9255,12 @@
                 "A": 213123355203392,
                 "B": 1861441668283043
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -8395,10 +9276,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8414,10 +9297,12 @@
                 "A": 194911757977,
                 "B": 4848632445673
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8433,10 +9318,12 @@
                 "A": 111291379285,
                 "B": 5132006475352
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -8452,10 +9339,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8471,10 +9360,12 @@
                 "A": 0,
                 "B": 548505585935212
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8490,10 +9381,12 @@
                 "A": 1306329913,
                 "B": 8444249301
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8509,10 +9402,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8528,10 +9423,12 @@
                 "A": 413097790108,
                 "B": 2670306092245
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8547,10 +9444,12 @@
                 "A": 751294024,
                 "B": 15442693066
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8566,10 +9465,12 @@
                 "A": 17805604,
                 "B": 436059158
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8585,10 +9486,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8604,10 +9507,12 @@
                 "A": 734680726150,
                 "B": 3093792868526
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 4,
         "tkn1_decimals": 6,
         "orders": [
@@ -8623,10 +9528,12 @@
                 "A": 163388096968052,
                 "B": 760734950934819
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -8642,10 +9549,12 @@
                 "A": 0,
                 "B": 1116961904425590
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8661,10 +9570,12 @@
                 "A": 106661390763,
                 "B": 689470068302
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8680,10 +9591,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8699,10 +9612,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8718,10 +9633,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8737,10 +9654,12 @@
                 "A": 961805813462,
                 "B": 1990328647664
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8756,10 +9675,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8775,10 +9696,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -8794,10 +9717,12 @@
                 "A": 2980679241121640,
                 "B": 3876484763339241
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -8813,10 +9738,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8832,10 +9759,12 @@
                 "A": 0,
                 "B": 59042689222
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8851,10 +9780,12 @@
                 "A": 0,
                 "B": 12269209786172
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8870,10 +9801,12 @@
                 "A": 0,
                 "B": 11941971885985
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8889,10 +9822,12 @@
                 "A": 0,
                 "B": 407895993213
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8908,10 +9843,12 @@
                 "A": 793046,
                 "B": 8629858
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8927,10 +9864,12 @@
                 "A": 0,
                 "B": 3828473594
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -8946,10 +9885,12 @@
                 "A": 0,
                 "B": 4107992041
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8965,10 +9906,12 @@
                 "A": 8816954911021,
                 "B": 88564033833787
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -8984,10 +9927,12 @@
                 "A": 7542099269919,
                 "B": 48752896072212
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9003,10 +9948,12 @@
                 "A": 0,
                 "B": 89010203
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9022,10 +9969,12 @@
                 "A": 31086023232,
                 "B": 1258794363780
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9041,10 +9990,12 @@
                 "A": 322985812970,
                 "B": 5970985942992
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9060,10 +10011,12 @@
                 "A": 0,
                 "B": 2548864320863
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9079,10 +10032,12 @@
                 "A": 316715624,
                 "B": 1265754606252
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9098,10 +10053,12 @@
                 "A": 1233655536178,
                 "B": 2300346228840
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9117,10 +10074,12 @@
                 "A": 918853223949,
                 "B": 55586854003948
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -9136,10 +10095,12 @@
                 "A": 0,
                 "B": 265692101501361
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -9155,10 +10116,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9174,10 +10137,12 @@
                 "A": 89121955491300,
                 "B": 774056185954304
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9193,10 +10158,12 @@
                 "A": 4833970773032,
                 "B": 771548300769681
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9212,10 +10179,12 @@
                 "A": 117477996738520,
                 "B": 744686686769674
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9231,10 +10200,12 @@
                 "A": 9956510762654,
                 "B": 154170194117592
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 6,
         "orders": [
@@ -9250,10 +10221,12 @@
                 "A": 7586632351644,
                 "B": 73725574260528
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9269,10 +10242,12 @@
                 "A": 1948515,
                 "B": 29521344
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9288,10 +10263,12 @@
                 "A": 1750981,
                 "B": 33547981
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9307,10 +10284,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9326,10 +10305,12 @@
                 "A": 16943247471,
                 "B": 1160551059946
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9345,10 +10326,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -9364,10 +10347,12 @@
                 "A": 731572590172416,
                 "B": 3009428539562415
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 2,
         "orders": [
@@ -9383,10 +10368,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9402,10 +10389,12 @@
                 "A": 0,
                 "B": 15404166537992
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9421,10 +10410,12 @@
                 "A": 6392845,
                 "B": 65673901
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9440,10 +10431,12 @@
                 "A": 78621420998,
                 "B": 666091367666
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9459,10 +10452,12 @@
                 "A": 215239039251,
                 "B": 629397181890
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9478,10 +10473,12 @@
                 "A": 0,
                 "B": 1019641690101662
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9497,10 +10494,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9516,10 +10515,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9535,10 +10536,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9554,10 +10557,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9573,10 +10578,12 @@
                 "A": 35849174,
                 "B": 225179981
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -9592,10 +10599,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -9611,10 +10620,12 @@
                 "A": 0,
                 "B": 13202346667595
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9630,10 +10641,12 @@
                 "A": 1106029368249440,
                 "B": 1640263801218312
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9649,10 +10662,12 @@
                 "A": 1657716079701301,
                 "B": 785475461108442
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9668,10 +10683,12 @@
                 "A": 0,
                 "B": 1641754040568763
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 6,
         "tkn1_decimals": 18,
         "orders": [
@@ -9687,10 +10704,12 @@
                 "A": 4735291325787168,
                 "B": 5771542226142764
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9706,10 +10725,12 @@
                 "A": 75285497,
                 "B": 251758872
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9725,10 +10746,12 @@
                 "A": 0,
                 "B": 422212465
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9744,10 +10767,12 @@
                 "A": 122963810179840,
                 "B": 1939577087784125
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9763,10 +10788,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9782,10 +10809,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 8,
         "orders": [
@@ -9801,10 +10830,12 @@
                 "A": 6527410,
                 "B": 52061458
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9820,10 +10851,12 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9839,10 +10872,12 @@
                 "A": 2784803785589,
                 "B": 38284735946769
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 6,
         "orders": [
@@ -9858,10 +10893,12 @@
                 "A": 761194234722,
                 "B": 8206335244012
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9877,10 +10914,12 @@
                 "A": 8103120,
                 "B": 19903286
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 8,
         "tkn1_decimals": 18,
         "orders": [
@@ -9896,10 +10935,12 @@
                 "A": 6093664678624880,
                 "B": 7250625960233619
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9915,10 +10956,12 @@
                 "A": 0,
                 "B": 1641754040568763
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 6,
         "orders": [
@@ -9934,10 +10977,12 @@
                 "A": 3636991,
                 "B": 41749485
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9953,10 +10998,12 @@
                 "A": 0,
                 "B": 440078071252594
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9972,10 +11019,12 @@
                 "A": 1432059267591,
                 "B": 278646010673002
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -9991,10 +11040,12 @@
                 "A": 2857983351848,
                 "B": 275788027321154
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -10010,10 +11061,12 @@
                 "A": 18376077485,
                 "B": 888905200190
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": true,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 9,
         "tkn1_decimals": 18,
         "orders": [
@@ -10029,10 +11082,12 @@
                 "A": 21475711489424,
                 "B": 85062356589755
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": true,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -10048,10 +11103,12 @@
                 "A": 7951602780796,
                 "B": 67201229626496
             }
-        ]
+        ],
+        "pm_within_range": true,
+        "no_limit_orders": true,
+        "prices_overlap": true
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -10067,10 +11124,12 @@
                 "A": 1792355796027,
                 "B": 65408873830469
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -10086,10 +11145,12 @@
                 "A": 183865313449,
                 "B": 2278035259754
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -10105,10 +11166,12 @@
                 "A": 26372844123,
                 "B": 68632319362
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     },
     {
-        "overlap": false,
         "tkn0_decimals": 18,
         "tkn1_decimals": 18,
         "orders": [
@@ -10124,6 +11187,9 @@
                 "A": 0,
                 "B": 0
             }
-        ]
+        ],
+        "pm_within_range": false,
+        "no_limit_orders": false,
+        "prices_overlap": false
     }
 ]
