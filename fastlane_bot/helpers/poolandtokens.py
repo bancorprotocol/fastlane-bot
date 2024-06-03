@@ -424,7 +424,7 @@ class PoolAndTokens:
             try:
                 cpc_list.append(ConstantProductCurve.from_carbon(**self._convert_to_float(order)))
             except Exception as e:
-                self.ConfigObj.logger.debug(f"[_carbon_to_cpc] curve {order} error {e}")
+                self.ConfigObj.logger.debug(f"[_carbon_to_cpc] order {order} error {e}")
         return cpc_list
 
     def _carbon_to_cpc_dict(self) -> Tuple[Dict, bool]:
