@@ -597,38 +597,6 @@ BANCOR_V2_CONVERTER_ABI = [
     }
 ]
 
-BANCOR_V3_NETWORK_ABI = [
-    {
-        "type": "event",
-        "name": "PoolCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract IPoolCollection", "name": "poolCollection", "type": "address"}]
-    },
-    {
-        "type": "event",
-        "name": "TokensTraded",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "sourceToken", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "targetToken", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "sourceAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "address", "name": "trader", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "withdrawPOL",
-        "stateMutability": "nonpayable",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
-BANCOR_V3_NETWORK_SETTINGS = [
-    {
-        "type": "function",
-        "name": "tokenWhitelistForPOL",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
-    }
-]
-
 BANCOR_V3_NETWORK_INFO_ABI = [
     {
         "type": "function",
