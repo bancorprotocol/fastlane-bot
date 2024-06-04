@@ -635,13 +635,6 @@ BANCOR_V3_POOL_COLLECTION_ABI = [
     },
     {
         "type": "function",
-        "name": "poolData",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"components": [{"internalType": "contract IPoolToken", "name": "poolToken", "type": "address"}, {"internalType": "uint32", "name": "tradingFeePPM", "type": "uint32"}, {"internalType": "bool", "name": "tradingEnabled", "type": "bool"}, {"internalType": "bool", "name": "depositingEnabled", "type": "bool"}, {"components": [{"internalType": "uint32", "name": "blockNumber", "type": "uint32"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "rate", "type": "tuple"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "invRate", "type": "tuple"}], "internalType": "struct AverageRates", "name": "averageRates", "type": "tuple"}, {"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}, {"internalType": "uint256", "name": "stakedBalance", "type": "uint256"}], "internalType": "struct PoolLiquidity", "name": "liquidity", "type": "tuple"}], "internalType": "struct Pool", "name": "", "type": "tuple"}]
-    },
-    {
-        "type": "function",
         "name": "tradingFeePPM",
         "stateMutability": "view",
         "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
