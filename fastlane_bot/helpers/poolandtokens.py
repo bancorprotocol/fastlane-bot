@@ -427,7 +427,7 @@ class PoolAndTokens:
                 self.ConfigObj.logger.debug(f"[_carbon_to_cpc] order {order} error {e}")
         return cpc_list
 
-    def _carbon_to_cpc_dict(self) -> Tuple[Dict, bool]:
+    def _carbon_to_cpc_dict(self) -> dict:
         encoded_orders = [
             {
                 "y": int(self.y_1),
