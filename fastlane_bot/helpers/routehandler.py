@@ -322,21 +322,17 @@ class TxRouteHandler:
             self.ConfigObj.WBTC_ADDRESS,
             self.ConfigObj.LINK_ADDRESS
         ]:
-            return [
-                {
-                    "platformId": 2,
-                    "sourceTokens": [self.wrapped_gas_token_to_native(source_token)],
-                    "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
-                }
-            ]
+            platform_id = 2
         else:
-            return [
-                {
-                    "platformId": 7,
-                    "sourceTokens": [source_token],
-                    "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
-                }
-            ]
+            platform_id = 7
+
+        return [
+            {
+                "platformId": platform_id,
+                "sourceTokens": [source_token],
+                "sourceAmounts": [abs(trade_instructions_objects[0].amtin_wei)]
+            }
+        ]
 
     def native_gas_token_to_wrapped(self, tkn: str):
         """
@@ -347,16 +343,6 @@ class TxRouteHandler:
             The token address, converted to wrapped gas token if the input was the native gas token
         """
         return self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS else tkn
-
-    def wrapped_gas_token_to_native(self, tkn: str):
-        """
-        This function returns the native gas token address if the input token is the wrapped gas token, otherwise it returns the input token address.
-        :param tkn: str
-            The token address
-        returns: str
-            The token address, converted to native gas token if the input was the wrapped gas token
-        """
-        return self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS if tkn == self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS else tkn
 
     @staticmethod
     def _get_trade_dicts_from_objects(trade_instructions: List[TradeInstruction]) -> List[Dict[str, Any]]:
