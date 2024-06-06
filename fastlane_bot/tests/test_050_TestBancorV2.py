@@ -201,30 +201,30 @@ def test_test_expected_output_bancorv2():
     tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     
     # Aggregate the carbon trades
-    agg_trade_instructions = (
+    trade_instructions = (
         tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
         if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
         else ordered_trade_instructions_objects
     )
     
     # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
+    tx_route_handler.calculate_trade_outputs(trade_instructions)
     
     # Aggregate multiple Bancor V3 trades into a single trade
-    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(calculated_trade_instructions)
+    tx_route_handler.aggregate_bancor_v3_trades(trade_instructions)
     
     # Get the flashloan token
-    fl_token = calculated_trade_instructions[0].tknin_address
+    fl_token = trade_instructions[0].tknin_address
     
     # If the flashloan token is WETH, then use ETH
     if fl_token == C.network.WETH_ADDRESS:
         fl_token = C.network.ETH_ADDRESS
     
     # Get the flashloan amount and token address
-    flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
+    flashloan_amount = int(trade_instructions[0].amtin_wei)
     
     # Encode the trade instructions
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(calculated_trade_instructions)
+    encoded_trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
     
     # Get the deadline
     deadline = bot._get_deadline(1)

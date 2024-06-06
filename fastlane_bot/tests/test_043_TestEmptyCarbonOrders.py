@@ -201,22 +201,22 @@ def test_test_empty_carbon_orders_removed():
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts, )
     # print(f"ordered_trade_instructions_objects: {ordered_trade_instructions_objects}")
     tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
-    agg_trade_instructions = (
+    trade_instructions = (
         tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
         if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
         else ordered_trade_instructions_objects
     )
 
     # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
+    tx_route_handler.calculate_trade_outputs(trade_instructions)
 
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(calculated_trade_instructions)
+    tx_route_handler.custom_data_encoder(trade_instructions)
     deadline = bot._get_deadline(1)
     
     # Get the route struct
     route_struct = [
         asdict(rs)
-        for rs in tx_route_handler.get_route_structs(encoded_trade_instructions, deadline)
+        for rs in tx_route_handler.get_route_structs(trade_instructions, deadline)
     ]
     for route in route_struct:
         if route["platformId"] == 6:

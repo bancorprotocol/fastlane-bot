@@ -162,19 +162,19 @@ def test_test_trade_merge():
     # Convert the trade instructions
     ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
     tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
-    agg_trade_instructions = (
+    trade_instructions = (
         tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
         if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
         else ordered_trade_instructions_objects
     )
     # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(agg_trade_instructions)
-    assert len(calculated_trade_instructions) == 3
+    tx_route_handler.calculate_trade_outputs(trade_instructions)
+    assert len(trade_instructions) == 3
     # Aggregate multiple Bancor V3 trades into a single trade
-    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(calculated_trade_instructions)
-    assert len(calculated_trade_instructions) == 2
-    assert calculated_trade_instructions[0].tknin != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
-    assert calculated_trade_instructions[0].tknout != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+    tx_route_handler.aggregate_bancor_v3_trades(trade_instructions)
+    assert len(trade_instructions) == 2
+    assert trade_instructions[0].tknin != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
+    assert trade_instructions[0].tknout != "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C"
     
 
 # ------------------------------------------------------------

@@ -174,11 +174,6 @@ def test_test_precision_using_all_tokens_in_carbon():
         ----------
         trade_instructions: List[Dict[str, Any]]
             The trade instructions.
-    
-        Returns
-        -------
-        List[Dict[str, Any]]
-            The trade outputs.
         """
     
         next_amount_in = trade_instructions[0].amtin
@@ -329,9 +324,6 @@ def test_test_precision_using_all_tokens_in_carbon():
             next_amount_in = amount_out
     
     
-        return trade_instructions
-    
-    
     arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
 
     for arb_opp in arb_finder.find_arb_opps():
@@ -351,11 +343,11 @@ def test_test_precision_using_all_tokens_in_carbon():
         tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     
         # Aggregate the carbon trades
-        agg_trade_instructions = (
+        trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
             if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
             else ordered_trade_instructions_objects
         )
     
         # Calculate the trade instructions
-        calculate_trade_outputs(tx_route_handler=tx_route_handler,trade_instructions=agg_trade_instructions)
+        calculate_trade_outputs(tx_route_handler, trade_instructions)
