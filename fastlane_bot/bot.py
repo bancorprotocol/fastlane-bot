@@ -406,36 +406,36 @@ class CarbonBot:
         )
 
         # Aggregate the carbon trades
-        agg_trade_instructions = (
+        trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
             if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
             else ordered_trade_instructions_objects
         )
 
         # Calculate the trade instructions
-        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
-            agg_trade_instructions
+        tx_route_handler.calculate_trade_outputs(
+            trade_instructions
         )
 
         # Aggregate multiple Bancor V3 trades into a single trade
-        calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
-            calculated_trade_instructions
+        tx_route_handler.aggregate_bancor_v3_trades(
+            trade_instructions
         )
 
         flashloan_struct = tx_route_handler.generate_flashloan_struct(
-            trade_instructions_objects=calculated_trade_instructions
+            trade_instructions_objects=trade_instructions
         )
 
         # Get the flashloan token
-        fl_token = calculated_trade_instructions[0].tknin_address
-        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
-        fl_token_decimals = calculated_trade_instructions[0].tknin_decimals
-        flashloan_amount_wei = int(calculated_trade_instructions[0].amtin_wei)
+        fl_token = trade_instructions[0].tknin_address
+        fl_token_symbol = trade_instructions[0].tknin_symbol
+        fl_token_decimals = trade_instructions[0].tknin_decimals
+        flashloan_amount_wei = int(trade_instructions[0].amtin_wei)
         flashloan_fee = FLASHLOAN_FEE_MAP.get(self.ConfigObj.NETWORK, 0)
         flashloan_fee_amt = flashloan_fee * (flashloan_amount_wei / 10**int(fl_token_decimals))
 
         flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
-            calculated_trade_instructions
+            trade_instructions
         )
 
         # Calculate the best profit
@@ -458,7 +458,7 @@ class CarbonBot:
             f"gas profit = {best_profit_gastkn}",
             f"usd profit = {best_profit_usd}",
             f"flashloan token = {fl_token_symbol}",
-            f"flashloan amount = {calculated_trade_instructions[0].amtin}",
+            f"flashloan amount = {trade_instructions[0].amtin}",
             f"flashloan profit = {flashloan_tkn_profit}"
         ]
         arb_ti_info = [
@@ -469,7 +469,7 @@ class CarbonBot:
                 "tkn_out": {trade.tknout_symbol: trade.tknout} if trade.tknout_symbol != trade.tknout else trade.tknout,
                 "amt_out": trade.amtout
             }
-            for trade in calculated_trade_instructions
+            for trade in trade_instructions
         ]
         arb_details = "\n".join(
             [
@@ -484,7 +484,7 @@ class CarbonBot:
         # Split Carbon Orders
         split_calculated_trade_instructions = split_carbon_trades(
             cfg=self.ConfigObj,
-            trade_instructions=calculated_trade_instructions
+            trade_instructions=trade_instructions
         )
 
         # Encode the trade instructions

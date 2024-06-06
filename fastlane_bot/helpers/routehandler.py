@@ -398,26 +398,20 @@ class TxRouteHandler:
         return list(zip(min_index, slices))
 
     @staticmethod
-    def aggregate_bancor_v3_trades(calculated_trade_instructions: List[TradeInstruction]):
+    def aggregate_bancor_v3_trades(trade_instructions: List[TradeInstruction]):
         """
         This function aggregates Bancor V3 trades into a single multi-hop when possible
 
         Parameters
         ----------
-        calculated_trade_instructions: List[TradeInstruction]
+        trade_instructions: List[TradeInstruction]
             Trade instructions that have already had trades calculated
-
-
-        Returns
-        -------
-        calculated_trade_instructions
-            The trade instructions now with Bancor V3 trades combined into single trades when possible.
         """
 
-        for idx, trade in enumerate(calculated_trade_instructions):
+        for idx, trade in enumerate(trade_instructions):
             if idx > 0:
-                if trade.exchange_name == calculated_trade_instructions[idx - 1].exchange_name == "bancor_v3":
-                    trade_before = calculated_trade_instructions[idx - 1]
+                if trade.exchange_name == trade_instructions[idx - 1].exchange_name == "bancor_v3":
+                    trade_before = trade_instructions[idx - 1]
                     # This checks for a two-hop trade through BNT and combines them
                     if trade_before.tknout_address == trade.tknin_address == trade.ConfigObj.BNT_ADDRESS:
                         new_trade_instruction = TradeInstruction(ConfigObj=trade.ConfigObj, cid=trade_before.cid,
@@ -427,10 +421,8 @@ class TxRouteHandler:
                                                                  pair_sorting="", raw_txs="[]", db=trade.db)
                         new_trade_instruction.tknout_is_native = trade.tknout_is_native
                         new_trade_instruction.tknout_is_wrapped = trade.tknout_is_wrapped
-                        calculated_trade_instructions[idx - 1] = new_trade_instruction
-                        calculated_trade_instructions.pop(idx)
-
-        return calculated_trade_instructions
+                        trade_instructions[idx - 1] = new_trade_instruction
+                        trade_instructions.pop(idx)
 
     def aggregate_carbon_trades(self, trade_instructions_objects: List[TradeInstruction]) -> List[TradeInstruction]:
         """
@@ -926,7 +918,7 @@ class TxRouteHandler:
 
     def calculate_trade_outputs(
             self, trade_instructions: List[TradeInstruction]
-    ) -> List[TradeInstruction]:
+    ):
         """
         Refactored calculate trade outputs.
 
@@ -934,11 +926,6 @@ class TxRouteHandler:
         ----------
         trade_instructions: List[Dict[str, Any]]
             The trade instructions.
-
-        Returns
-        -------
-        List[Dict[str, Any]]
-            The trade outputs.
         """
         next_amount_in = trade_instructions[0].amtin
         for idx, trade in enumerate(trade_instructions):
@@ -1078,8 +1065,6 @@ class TxRouteHandler:
                 trade_instructions[idx]._amtout_wei = amount_out_wei
 
             next_amount_in = amount_out
-
-        return trade_instructions
 
     def _from_wei_to_decimals(self, tkn0_amt: Decimal, tkn0_decimals: int) -> Decimal:
         return Decimal(str(tkn0_amt)) / Decimal("10") ** Decimal(str(tkn0_decimals))
