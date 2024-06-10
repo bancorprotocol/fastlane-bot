@@ -527,13 +527,19 @@ class CarbonBot:
         )
 
         # Validate and submit the transaction
-        tx_hash, tx_receipt = self.tx_helpers.validate_and_submit_transaction(
-            route_struct=route_struct_processed,
-            src_amt=flashloan_amount_wei,
-            src_address=fl_token,
-            expected_profit_gastkn=best_profit_gastkn,
-            expected_profit_usd=best_profit_usd,
-            flashloan_struct=flashloan_struct,
-        )
-
-        return tx_hash, tx_receipt
+        while True:
+            try:
+                tx_hash, tx_receipt = self.tx_helpers.validate_and_submit_transaction(
+                    route_struct=route_struct_processed,
+                    src_amt=flashloan_amount_wei,
+                    src_address=fl_token,
+                    expected_profit_gastkn=best_profit_gastkn,
+                    expected_profit_usd=best_profit_usd,
+                    flashloan_struct=flashloan_struct,
+                )
+                return tx_hash, tx_receipt
+            except Exception as e:
+                if "max fee per gas less than block base fee" in str(e):
+                    self.ConfigObj.logger.error(f"{e}; retrying...")
+                else:
+                    raise
