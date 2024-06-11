@@ -111,6 +111,41 @@ def get_params(self, CCm, dst_tokens, src_token):
                 return None
     return pstart
 
+def get_params_list(self, CCm, dst_tokens, src_token):
+    # For a triangle, the pstart of each dst_token is derived from its rate vs the src_token.
+    # Since Carbon orders can contain diverse prices independent of external market prices, and
+    # we require that the pstart be on the Carbon curve to get successful optimizer runs,
+    # then generate a list of suitable pstarts such that every combination is explored.
+
+    # ASSUMPTIONS: There must be a complete triangle arb available i.e. src_token->dst_token1->dst_token2->src_token
+    pstart_list = []
+    sort_sequence = ['bancor_v2','bancor_v3'] + self.ConfigObj.UNI_V2_FORKS + self.ConfigObj.UNI_V3_FORKS
+    price_dict = {}
+    price_dict[src_token] = [1]
+    for dst_token in [token for token in dst_tokens if token != src_token]:
+        curves = list(CCm.bytknx(dst_token).bytkny(src_token))
+        CC = CPCContainer(custom_sort(curves, sort_sequence, self.ConfigObj.CARBON_V1_FORKS))
+        if CC:
+            if CC[0].params['exchange'] in self.ConfigObj.CARBON_V1_FORKS: #only carbon curve options left
+                price_dict[dst_token] = [curve.p for curve in CC] # every price
+            else:
+                price_dict[dst_token] = [CC[0].p]
+        else:
+            curves = list(CCm.bytknx(src_token).bytkny(dst_token))
+            CC = CPCContainer(custom_sort(curves, sort_sequence, self.ConfigObj.CARBON_V1_FORKS))
+            if CC:
+                if CC[0].params['exchange'] in self.ConfigObj.CARBON_V1_FORKS: #only carbon curve options left
+                    price_dict[dst_token] = [1/curve.p for curve in CC] # every price
+                else:
+                    price_dict[dst_token] = [1 / CC[0].p]
+            else:
+                return None
+            
+    # combinatorially expand all the options in the price_dict into separate pstart dicts and put them in the pstart_list
+    pstart_list = [dict(zip(price_dict.keys(), values)) for values in itertools.product(*price_dict.values())]
+
+    return pstart_list
+
 def custom_sort(data, sort_sequence, carbon_v1_forks):
     sort_order = {key: index for index, key in enumerate(sort_sequence) if key not in carbon_v1_forks}
     return sorted(data, key=lambda item: float('inf') if item.params['exchange'] in carbon_v1_forks else sort_order.get(item.params['exchange'], float('inf')))
@@ -131,55 +166,69 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
             candidates = []
 
         combos = self.get_comprehensive_triangles(self.flashloan_tokens, self.CCm)
+        self.ConfigObj.logger.info(f"******* [triangle multi] combos: {len(combos)}")
+        carbon_counts = 0
+        total_iterations = 0
 
         for src_token, miniverse in combos:
-            try:
-                CC_cc = CPCContainer(miniverse)
-                O = MargPOptimizer(CC_cc)
-                pstart = get_params(self, CC_cc, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=dict(pstart=pstart))
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
-                    # Failed to converge
+            CC_cc = CPCContainer(miniverse)
+            O = MargPOptimizer(CC_cc)
+            # carbon screener
+            has_carbon_curves = len([1 for curve in CC_cc if curve.params.exchange in self.ConfigObj.CARBON_V1_FORKS])>1
+            if has_carbon_curves:
+                carbon_counts += 1
+                # generate every possible Carbon price combination pstart for this set of curves
+                pstart_list = get_params_list(self, CC_cc, CC_cc.tokens(), src_token)
+            else:
+                # use the regular method (which can be simplified to not use random)
+                pstart_list = [get_params(self, CC_cc, CC_cc.tokens(), src_token)]
+            for pstart in pstart_list:
+                try:
+                    total_iterations += 1
+                    r = O.optimize(src_token, params=dict(pstart=pstart))
+                    trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
+                    if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
+                        # Failed to converge
+                        continue
+                    trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
+                    trade_instructions = r.trade_instructions()
+
+                except Exception as e:
+                    self.ConfigObj.logger.info(f"[triangle multi] {e}")
                     continue
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions = r.trade_instructions()
+                profit_src = -r.result
 
-            except Exception as e:
-                self.ConfigObj.logger.info(f"[triangle multi] {e}")
-                continue
-            profit_src = -r.result
+                # Get the cids
+                cids = [ti["cid"] for ti in trade_instructions_dic]
 
-            # Get the cids
-            cids = [ti["cid"] for ti in trade_instructions_dic]
+                # Calculate the profit
+                profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
+                if str(profit) == "nan":
+                    self.ConfigObj.logger.debug("profit is nan, skipping")
+                    continue
 
-            # Calculate the profit
-            profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
-            if str(profit) == "nan":
-                self.ConfigObj.logger.debug("profit is nan, skipping")
-                continue
+                # Handle candidates based on conditions
+                candidates += self.handle_candidates(
+                    best_profit,
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
 
-            # Handle candidates based on conditions
-            candidates += self.handle_candidates(
-                best_profit,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
-
-            # Find the best operations
-            best_profit, ops = self.find_best_operations(
-                best_profit,
-                ops,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
-
+                # Find the best operations
+                best_profit, ops = self.find_best_operations(
+                    best_profit,
+                    ops,
+                    profit,
+                    trade_instructions_df,
+                    trade_instructions_dic,
+                    src_token,
+                    trade_instructions,
+                )
+        self.ConfigObj.logger.info(f"******* [triangle multi] carbon counts: {carbon_counts}")
+        self.ConfigObj.logger.info(f"******* [triangle multi] total iterations: {total_iterations}")
         return candidates if self.result == self.AO_CANDIDATES else ops
     
     def get_comprehensive_triangles(
@@ -235,7 +284,7 @@ class ArbitrageFinderTriangleMultiComplete(ArbitrageFinderTriangleBase):
 
             # Get [(flt,curves)] analysis set for the flashloan token
             flt_triangle_analysis_set = get_analysis_set_per_flt(flt, valid_triangles, all_relevant_pairs_info)
-            self.ConfigObj.logger.debug(f"[triangle_multi_complete.get_combos] flt_triangle_analysis_set {flt, len(flt_triangle_analysis_set)}")
+            self.ConfigObj.logger.debug(f"******* [triangle_multi_complete.get_combos] flt_triangle_analysis_set {flt, len(flt_triangle_analysis_set)}")
 
             # The entire analysis set for all flashloan tokens
             combos.extend(flt_triangle_analysis_set)
