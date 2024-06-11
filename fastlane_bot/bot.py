@@ -539,7 +539,7 @@ class CarbonBot:
                 )
                 return tx_hash, tx_receipt
             except Exception as e:
-                if "max fee per gas less than block base fee" in str(e):
+                if "less than block base fee" in str(e):
                     self.ConfigObj.logger.error(f"{e}; retrying...")
                 else:
                     raise
