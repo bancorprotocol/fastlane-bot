@@ -511,39 +511,6 @@ class TxRouteHandler:
                 result.extend(sublist)
         return result
 
-    def _calc_amount1(
-            self,
-            liquidity: Decimal,
-            sqrt_price_times_q96_lower_bound: Decimal,
-            sqrt_price_times_q96_upper_bound: Decimal,
-    ) -> Decimal:
-        """
-        Refactored calc amount1.
-
-        Parameters
-        ----------
-        liquidity: Decimal
-            The liquidity.
-        sqrt_price_times_q96_lower_bound: Decimal
-            The sqrt price times q96 lower bound.
-        sqrt_price_times_q96_upper_bound: Decimal
-            The sqrt price times q96 upper bound.
-
-        Returns
-        -------
-        Decimal
-            The amount1.
-        """
-        if sqrt_price_times_q96_lower_bound > sqrt_price_times_q96_upper_bound:
-            sqrt_price_times_q96_lower_bound, sqrt_price_times_q96_upper_bound = (
-                sqrt_price_times_q96_upper_bound,
-                sqrt_price_times_q96_lower_bound,
-            )
-        return Decimal(
-            liquidity
-            * (sqrt_price_times_q96_upper_bound - sqrt_price_times_q96_lower_bound)
-        )
-
     def _swap_token0_in(
             self,
             amount_in: Decimal,
@@ -578,7 +545,7 @@ class TxRouteHandler:
         """
         price_next_n = int(liquidity * self.ConfigObj.Q96 * sqrt_price)
         price_next_d = int(liquidity * self.ConfigObj.Q96 + amount_in * (1 - fee) * decimal_tkn0_modifier * sqrt_price)
-        amount_out = self._calc_amount1(liquidity, sqrt_price, Decimal(price_next_n // price_next_d)) / self.ConfigObj.Q96
+        amount_out = liquidity * abs(sqrt_price - price_next_n // price_next_d) / self.ConfigObj.Q96
 
         return amount_out / decimal_tkn1_modifier
 
