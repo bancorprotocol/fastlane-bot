@@ -2,7 +2,13 @@
 
 ## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.2...HEAD)
+
+- Refactor Triangle Mode [\#650](https://github.com/bancorprotocol/fastlane-bot/issues/650)
+
+## [v3.2.2](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.2) (2024-05-27)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v...v3.2.2)
 
 - last\_updated\_block error when mgr.pool\_data is empty [\#583](https://github.com/bancorprotocol/fastlane-bot/issues/583)
 
@@ -11,6 +17,30 @@ Closed issues
 - Bot should only import from top level [\#625](https://github.com/bancorprotocol/fastlane-bot/issues/625)
 - Dealing with overlapping strategies in the Optimizer [\#595](https://github.com/bancorprotocol/fastlane-bot/issues/595)
 - cvxpy [\#537](https://github.com/bancorprotocol/fastlane-bot/issues/537)
+
+Merged pull requests
+
+- fix: get topics from correct event contract abi [\#677](https://github.com/bancorprotocol/fastlane-bot/pull/677) ([platonfloria](https://github.com/platonfloria))
+- Release candidate - pair finder, eth\_getLogs and more [\#670](https://github.com/bancorprotocol/fastlane-bot/pull/670) ([zavelevsky](https://github.com/zavelevsky))
+- Pool finder logging [\#668](https://github.com/bancorprotocol/fastlane-bot/pull/668) ([platonfloria](https://github.com/platonfloria))
+- fix: handle timeout exception correctly [\#667](https://github.com/bancorprotocol/fastlane-bot/pull/667) ([platonfloria](https://github.com/platonfloria))
+- fix: do not update event mappings csvs in read\_only mode [\#665](https://github.com/bancorprotocol/fastlane-bot/pull/665) ([platonfloria](https://github.com/platonfloria))
+- fix: get logs iterative [\#663](https://github.com/bancorprotocol/fastlane-bot/pull/663) ([platonfloria](https://github.com/platonfloria))
+- removed Sei and multi\_triangle\_complete - temporarily [\#662](https://github.com/bancorprotocol/fastlane-bot/pull/662) ([zavelevsky](https://github.com/zavelevsky))
+- Add COSMIC, ELON and KENDU to the list of tax tokens for Ethereum [\#655](https://github.com/bancorprotocol/fastlane-bot/pull/655) ([barakman](https://github.com/barakman))
+- Switch from flashbots to mevblocker, and enable access-lists [\#652](https://github.com/bancorprotocol/fastlane-bot/pull/652) ([barakman](https://github.com/barakman))
+- Revert "focus the pol to ETH only temp solve multicall" [\#645](https://github.com/bancorprotocol/fastlane-bot/pull/645) ([zavelevsky](https://github.com/zavelevsky))
+- TEMP: focus the pol to ETH only temp solve multicall [\#644](https://github.com/bancorprotocol/fastlane-bot/pull/644) ([platonfloria](https://github.com/platonfloria))
+- focus the pol to ETH only temp solve multicall [\#643](https://github.com/bancorprotocol/fastlane-bot/pull/643) ([NIXBNT](https://github.com/NIXBNT))
+- Handle Multicall Failures [\#641](https://github.com/bancorprotocol/fastlane-bot/pull/641) ([barakman](https://github.com/barakman))
+- Sei release candidate [\#639](https://github.com/bancorprotocol/fastlane-bot/pull/639) ([platonfloria](https://github.com/platonfloria))
+- Fix function `async_update_pools_from_contracts` [\#627](https://github.com/bancorprotocol/fastlane-bot/pull/627) ([barakman](https://github.com/barakman))
+- fix: produce a correct release tag [\#623](https://github.com/bancorprotocol/fastlane-bot/pull/623) ([platonfloria](https://github.com/platonfloria))
+- Fix function `async_update_pools_from_contracts` [\#616](https://github.com/bancorprotocol/fastlane-bot/pull/616) ([barakman](https://github.com/barakman))
+- Cleanup terraformer script and update some data files [\#615](https://github.com/bancorprotocol/fastlane-bot/pull/615) ([barakman](https://github.com/barakman))
+- Fix `last_updated_block` key error [\#612](https://github.com/bancorprotocol/fastlane-bot/pull/612) ([barakman](https://github.com/barakman))
+- Filter out erroneous trade instructions [\#609](https://github.com/bancorprotocol/fastlane-bot/pull/609) ([barakman](https://github.com/barakman))
+- Clean up some code related to `mgr.pool_data` [\#600](https://github.com/bancorprotocol/fastlane-bot/pull/600) ([barakman](https://github.com/barakman))
 
 ## [v](https://github.com/bancorprotocol/fastlane-bot/tree/v) (2024-05-06)
 
