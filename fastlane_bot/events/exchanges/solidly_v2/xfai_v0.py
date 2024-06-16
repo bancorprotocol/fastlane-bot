@@ -3,7 +3,7 @@ from typing import Any, Tuple
 
 from web3.contract import Contract, AsyncContract
 
-from fastlane_bot.data.abi import XFAI_V0_POOL_ABI, XFAI_V0_FACTORY_ABI
+from fastlane_bot.data.abi import XFAI_V0_POOL_ABI, XFAI_V0_FACTORY_ABI, XFAI_V0_CORE_ABI
 from .base import SolidlyV2
 
 
@@ -24,7 +24,7 @@ class XFaiV2(SolidlyV2):
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         core_address = self.factory_contract.w3.to_checksum_address(await self.factory_contract.caller.getXfaiCore())
-        core_contract = self.factory_contract.w3.eth.contract(address=core_address, abi=self.get_abi())
+        core_contract = self.factory_contract.w3.eth.contract(address=core_address, abi=XFAI_V0_CORE_ABI)
         fee = await core_contract.caller.getTotalFee()
         fee_float = float(fee) / 10 ** 4
         return str(fee_float), fee_float
