@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastlane-bot"
-version = "3.2.2"
+version = "3.2.3"
 description = "Carbon Arbitrage Bot, an open-source arbitrage protocol, allows any user to perform arbitrage between Bancor ecosystem protocols and external exchanges and redirect arbitrage profits back to the protocol."
 authors = ["Bancor Network <services@bancor.network>"]
 license = "MIT"
