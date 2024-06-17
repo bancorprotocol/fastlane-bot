@@ -12,9 +12,6 @@ class XFaiV2(SolidlyV2):
     def get_abi(self):
         return XFAI_V0_POOL_ABI
 
-    def get_core_abi(self):
-        return XFAI_V0_CORE_ABI
-
     async def get_tkn0(self, address: str, contract: Contract, event: Any) -> str:
         return await contract.caller.poolToken()
 
@@ -27,7 +24,7 @@ class XFaiV2(SolidlyV2):
 
     async def get_fee(self, address: str, contract: AsyncContract) -> Tuple[str, float]:
         core_address = self.factory_contract.w3.to_checksum_address(await self.factory_contract.caller.getXfaiCore())
-        core_contract = self.factory_contract.w3.eth.contract(address=core_address, abi=self.get_core_abi())
+        core_contract = self.factory_contract.w3.eth.contract(address=core_address, abi=XFAI_V0_CORE_ABI)
         fee = await core_contract.caller.getTotalFee()
         fee_float = float(fee) / 10 ** 4
         return str(fee_float), fee_float
