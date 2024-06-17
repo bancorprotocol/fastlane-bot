@@ -1,8 +1,10 @@
 # Changelog
 
-## [Unreleased](https://github.com/bancorprotocol/fastlane-bot/tree/HEAD)
+## [v3.2.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.3) (2024-06-16)
 
-[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.2...HEAD)
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.2...v3.2.3)
+
+- Add numpy version to pyproject.toml [\#690](https://github.com/bancorprotocol/fastlane-bot/pull/690) ([Lesigh-3100](https://github.com/Lesigh-3100))
 
 - Refactor Triangle Mode [\#650](https://github.com/bancorprotocol/fastlane-bot/issues/650)
 
