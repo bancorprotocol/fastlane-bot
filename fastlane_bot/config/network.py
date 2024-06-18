@@ -791,7 +791,7 @@ class _ConfigNetworkSei(ConfigNetwork):
     """
 
     NETWORK = S.NETWORK_SEI
-    NETWORK_ID = "1329" # TODO
+    NETWORK_ID = "1329"
     NETWORK_NAME = "sei"
     DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
     RPC_ENDPOINT = "https://evm-rpc.sei-apis.com/?x-apikey="
@@ -808,15 +808,15 @@ class _ConfigNetworkSei(ConfigNetwork):
     WRAPPED_GAS_TOKEN_ADDRESS = "0xE30feDd158A2e3b13e9badaeABaFc5516e95e8C7"
     NATIVE_GAS_TOKEN_SYMBOL = "SEI"
     WRAPPED_GAS_TOKEN_SYMBOL = "WSEI"
-    STABLECOIN_ADDRESS = "0xace5f7Ea93439Af39b46d2748fA1aC19951c8d7C" #TODO USDC on devnet
+    STABLECOIN_ADDRESS = "0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1"
 
     IS_INJECT_POA_MIDDLEWARE = False
     # Balancer
-    BALANCER_VAULT_ADDRESS = "0x7ccBebeb88696f9c8b061f1112Bb970158e29cA5" # # TODO Jellyswap on devnet
+    BALANCER_VAULT_ADDRESS = "0xFB43069f6d0473B85686a85F4Ce4Fc1FD8F00875"
 
     CHAIN_FLASHLOAN_TOKENS = {
         "0xE30feDd158A2e3b13e9badaeABaFc5516e95e8C7": "WSEI", 
-        "0xace5f7Ea93439Af39b46d2748fA1aC19951c8d7C": "USDC", #TODO confirm for Mainnet
+        "0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
