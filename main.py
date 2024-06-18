@@ -591,7 +591,7 @@ if __name__ == "__main__":
             "multi_triangle",
             "b3_two_hop",
             "multi_pairwise_pol",
-            "multi_pairwise_all",
+            "multi_pairwise_all"
         ],
     )
     parser.add_argument(
