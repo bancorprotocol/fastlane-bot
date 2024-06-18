@@ -74,7 +74,6 @@ from .modes.pairwise_multi_all import FindArbitrageMultiPairwiseAll
 from .modes.pairwise_multi_pol import FindArbitrageMultiPairwisePol
 from .modes.pairwise_single import FindArbitrageSinglePairwise
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
-from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_single import ArbitrageFinderTriangleSingle
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
 from .utils import num_format
@@ -110,7 +109,6 @@ class CarbonBot:
         "b3_two_hop": ArbitrageFinderTriangleBancor3TwoHop,
         "multi_pairwise_pol": FindArbitrageMultiPairwisePol,
         "multi_pairwise_all": FindArbitrageMultiPairwiseAll,
-        "multi_triangle_complete": ArbitrageFinderTriangleMultiComplete,
     }
 
     class NoArbAvailable(Exception):
