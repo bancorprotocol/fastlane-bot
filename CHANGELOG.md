@@ -1,5 +1,13 @@
 # Changelog
 
+## [v3.2.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.4) (2024-06-17)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.3...v3.2.4)
+
+Merged pull requests
+
+- Add xfai carbon deployment [\#689](https://github.com/bancorprotocol/fastlane-bot/pull/689) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
 ## [v3.2.3](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.3) (2024-06-16)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.2...v3.2.3)
