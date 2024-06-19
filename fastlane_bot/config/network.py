@@ -276,6 +276,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_FANTOM = S.NETWORK_FANTOM
     NETWORK_MANTLE = S.NETWORK_MANTLE
     NETWORK_LINEA = S.NETWORK_LINEA
+    NETWORK_SEI = S.NETWORK_SEI
 
     # FLAGS
     #######################################################################################
@@ -316,7 +317,9 @@ class ConfigNetwork(ConfigBase):
         elif network == cls.NETWORK_MANTLE:
             return _ConfigNetworkMantle(_direct=False)
         elif network == cls.NETWORK_LINEA:
-            return _ConfigNetworkLinea(_direct=False)
+            return _ConfigNetworkLinea(_direct=False)  
+        elif network == cls.NETWORK_SEI:
+            return _ConfigNetworkSei(_direct=False)    
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -778,6 +781,42 @@ class _ConfigNetworkLinea(ConfigNetwork):
     CHAIN_FLASHLOAN_TOKENS = {
         "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f": "WETH",
         "0x176211869ca2b568f2a7d4ee941e073a821ee1ff": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkSei(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_SEI
+    NETWORK_ID = "1329"
+    NETWORK_NAME = "sei"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+    RPC_ENDPOINT = "https://evm-rpc.sei-apis.com/?x-apikey="
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0xC56Eb3d03C5D7720DAf33a3718affb9BcAb03FBc"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = "0xe4816658ad10bF215053C533cceAe3f59e1f1087"
+    CARBON_CONTROLLER_VOUCHER = "0xA4682A2A5Fe02feFF8Bd200240A41AD0E6EaF8d5"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0xE30feDd158A2e3b13e9badaeABaFc5516e95e8C7"
+    NATIVE_GAS_TOKEN_SYMBOL = "SEI"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WSEI"
+    STABLECOIN_ADDRESS = "0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1"
+
+    IS_INJECT_POA_MIDDLEWARE = False
+    # Balancer
+    BALANCER_VAULT_ADDRESS = "0xFB43069f6d0473B85686a85F4Ce4Fc1FD8F00875"
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        "0xE30feDd158A2e3b13e9badaeABaFc5516e95e8C7": "WSEI", 
+        "0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1": "USDC",
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
