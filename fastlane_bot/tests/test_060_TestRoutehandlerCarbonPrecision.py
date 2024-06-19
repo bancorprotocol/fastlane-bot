@@ -166,29 +166,7 @@ pools = db.get_pool_data_with_tokens()
 def test_test_precision_using_all_tokens_in_carbon():
 # ------------------------------------------------------------
     
-    # +
-    arb_mode = "multi"
-    
-    arb_finder = bot._get_arb_finder(arb_mode)
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    
-    r = [arb for arb in r if len(arb[2]) >= 2]
-    r.sort(key=lambda x: x[0], reverse=True)
-    print(f"number of arbs found = {len(r)}")
-    
-    
-    # -
-    
-    def calculate_trade_outputs(tx_route_handler: TxRouteHandler,
-        trade_instructions: List[TradeInstruction]
-    ) -> List[TradeInstruction]:
+    def calculate_trade_outputs(tx_route_handler: TxRouteHandler, trade_instructions: List[TradeInstruction]):
         """
         Refactored calculate trade outputs.
     
@@ -196,11 +174,6 @@ def test_test_precision_using_all_tokens_in_carbon():
         ----------
         trade_instructions: List[Dict[str, Any]]
             The trade instructions.
-    
-        Returns
-        -------
-        List[Dict[str, Any]]
-            The trade outputs.
         """
     
         next_amount_in = trade_instructions[0].amtin
@@ -351,53 +324,30 @@ def test_test_precision_using_all_tokens_in_carbon():
             next_amount_in = amount_out
     
     
-        return trade_instructions
-    
-    
-    for arb in r:
-    
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb
-    
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+
+    for arb_opp in arb_finder.find_arb_opps():
+        src_token = arb_opp["src_token"]
+        trade_instructions_dic = arb_opp["trade_instructions_dic"]
+
         # Order the trade instructions
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = bot._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
-        )
+        ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
     
         # Scale the trade instructions
-        ordered_scaled_dcts = bot._basic_scaling(
-            ordered_trade_instructions_dct, best_src_token
-        )
+        ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
     
         # Convert the trade instructions
-        ordered_trade_instructions_objects = bot._convert_trade_instructions(
-            ordered_scaled_dcts
-        )
+        ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
     
         # Create the tx route handler
-        tx_route_handler = TxRouteHandler(
-            trade_instructions=ordered_trade_instructions_objects
-        )
+        tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     
         # Aggregate the carbon trades
-        agg_trade_instructions = (
+        trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-            if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+            if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
             else ordered_trade_instructions_objects
         )
     
         # Calculate the trade instructions
-        #try:
-        calculated_trade_instructions = calculate_trade_outputs(tx_route_handler=tx_route_handler,trade_instructions=agg_trade_instructions)
-    
-    
-    
-    
+        calculate_trade_outputs(tx_route_handler, trade_instructions)

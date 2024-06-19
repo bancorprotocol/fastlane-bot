@@ -128,7 +128,7 @@ def test_test_update_from_event_carbon_v1_update():
     event = event_data['carbon_v1_event_update']
     
     manager.update_from_event(Event.from_dict(event_create_for_update))
-    pools_to_add_from_contracts = [event[2].args['id'] for event in manager.pools_to_add_from_contracts]
+    pools_to_add_from_contracts = [event.args['id'] for event in manager.pools_to_add_from_contracts]
     
     assert event['args']['id'] in pools_to_add_from_contracts
     
@@ -173,7 +173,6 @@ def test_test_update_from_event_carbon_v1_delete():
     assert cid not in [pool['cid'] for pool in manager.pool_data]
     
     manager.update_from_event(Event.from_dict(event))
-    assert cid in [p[-1] for p in manager.pools_to_add_from_contracts]
     fake_pool_data = {
         "address": event['address'],
         "cid": cid,

@@ -597,38 +597,6 @@ BANCOR_V2_CONVERTER_ABI = [
     }
 ]
 
-BANCOR_V3_NETWORK_ABI = [
-    {
-        "type": "event",
-        "name": "PoolCreated",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract IPoolCollection", "name": "poolCollection", "type": "address"}]
-    },
-    {
-        "type": "event",
-        "name": "TokensTraded",
-        "anonymous": False,
-        "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "sourceToken", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "targetToken", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "sourceAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "targetFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "bntFeeAmount", "type": "uint256"}, {"indexed": False, "internalType": "address", "name": "trader", "type": "address"}]
-    },
-    {
-        "type": "function",
-        "name": "withdrawPOL",
-        "stateMutability": "nonpayable",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}]
-    }
-]
-
-BANCOR_V3_NETWORK_SETTINGS = [
-    {
-        "type": "function",
-        "name": "tokenWhitelistForPOL",
-        "stateMutability": "view",
-        "inputs": [],
-        "outputs": [{"internalType": "contract Token[]", "name": "", "type": "address[]"}]
-    }
-]
-
 BANCOR_V3_NETWORK_INFO_ABI = [
     {
         "type": "function",
@@ -664,13 +632,6 @@ BANCOR_V3_POOL_COLLECTION_ABI = [
         "name": "TradingLiquidityUpdated",
         "anonymous": False,
         "inputs": [{"indexed": True, "internalType": "bytes32", "name": "contextId", "type": "bytes32"}, {"indexed": True, "internalType": "contract Token", "name": "pool", "type": "address"}, {"indexed": True, "internalType": "contract Token", "name": "tkn_address", "type": "address"}, {"indexed": False, "internalType": "uint256", "name": "prevLiquidity", "type": "uint256"}, {"indexed": False, "internalType": "uint256", "name": "newLiquidity", "type": "uint256"}]
-    },
-    {
-        "type": "function",
-        "name": "poolData",
-        "stateMutability": "view",
-        "inputs": [{"internalType": "contract Token", "name": "pool", "type": "address"}],
-        "outputs": [{"components": [{"internalType": "contract IPoolToken", "name": "poolToken", "type": "address"}, {"internalType": "uint32", "name": "tradingFeePPM", "type": "uint32"}, {"internalType": "bool", "name": "tradingEnabled", "type": "bool"}, {"internalType": "bool", "name": "depositingEnabled", "type": "bool"}, {"components": [{"internalType": "uint32", "name": "blockNumber", "type": "uint32"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "rate", "type": "tuple"}, {"components": [{"internalType": "uint112", "name": "n", "type": "uint112"}, {"internalType": "uint112", "name": "d", "type": "uint112"}], "internalType": "struct Fraction112", "name": "invRate", "type": "tuple"}], "internalType": "struct AverageRates", "name": "averageRates", "type": "tuple"}, {"components": [{"internalType": "uint128", "name": "bntTradingLiquidity", "type": "uint128"}, {"internalType": "uint128", "name": "baseTokenTradingLiquidity", "type": "uint128"}, {"internalType": "uint256", "name": "stakedBalance", "type": "uint256"}], "internalType": "struct PoolLiquidity", "name": "liquidity", "type": "tuple"}], "internalType": "struct Pool", "name": "", "type": "tuple"}]
     },
     {
         "type": "function",

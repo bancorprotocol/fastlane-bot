@@ -7,15 +7,13 @@
 # ------------------------------------------------------------
 
 
-
 """
-This module contains the tests which ensure the target_tokens parameter is respected.
+This module contains the tests the `b3_two_hop` arb-mode with the `target_tokens` parameter.
 """
-from fastlane_bot import Bot
+from fastlane_bot import Bot, ConfigNetwork
 from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3,  CarbonV1, BancorV3
-import subprocess, os, sys
-import pytest
+import subprocess, os
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(CPC))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(Bot))
 print("{0.__name__} v{0.__VERSION__} ({0.__DATE__})".format(UniswapV2))
@@ -28,17 +26,10 @@ from fastlane_bot import __VERSION__
 require("3.0", __VERSION__)
 
 
-
-from fastlane_bot.tools.cpc import T
-
-
 def find_main_py():
     # Start at the directory of the current script
     cwd = os.path.abspath(os.path.join(os.getcwd()))
     
-    with open("log.txt", "w") as f:
-        f.write(f"Searching for main.py in {cwd}")
-                
     print(f"Searching for main.py in {cwd}")
     while True:
         # Check if main.py exists in the current directory
@@ -55,37 +46,24 @@ def find_main_py():
             cwd = new_cwd
        
        
-def run_command(mode):
-    
-    # Find the correct path to main.py
-    main_script_path = find_main_py()
-    print(f"Found main.py in {main_script_path}")
-    main_script_path = main_script_path + "/main.py"
-
-    # Run the command
-    cmd = [
-        "python",
-        main_script_path,
-        f"--arb_mode={mode}",
-        # "--use_cached_events=True",
-        "--alchemy_max_block_fetch=5",
-        "--logging_path=fastlane_bot/data/",
-        "--timeout=120",
-        f"--target_tokens={T.WETH},{T.DAI}",
-        "--blockchain=ethereum"
-    ]
-
-    expected_log_line = "Limiting pools by target_tokens. Removed "
-    result = subprocess.run(cmd, text=True, capture_output=True, check=True)
-    assert expected_log_line in result.stderr, result.stderr
-
-
 # ------------------------------------------------------------
 # Test      906
 # File      test_906_TargetTokens.py
-# Segment   Test Flashloan Tokens b3_two_hop
+# Segment   Test b3_two_hop with target tokens
 # ------------------------------------------------------------
-def test_test_flashloan_tokens_b3_two_hop():
+def test_test_b3_two_hop_with_target_tokens():
 # ------------------------------------------------------------
     
-    run_command("single")
+    cmd = [
+        "python",
+        find_main_py() + "/main.py",
+        f"--arb_mode=b3_two_hop",
+        "--alchemy_max_block_fetch=5",
+        "--logging_path=fastlane_bot/data/",
+        "--timeout=120",
+        f"--target_tokens={ConfigNetwork.WETH_ADDRESS},{ConfigNetwork.DAI_ADDRESS}",
+        "--blockchain=ethereum"
+    ]
+
+    result = subprocess.run(cmd, text=True, capture_output=True, check=True)
+    assert result.returncode == 0

@@ -33,7 +33,6 @@ def mock_args():
             self.logging_path = ""
             self.loglevel = "INFO"
             self.use_cached_events = 'False'
-            self.run_data_validator = 'False'
             self.randomizer = "3"
             self.limit_bancor3_flashloan_tokens = 'True'
             self.default_min_profit_gas_token = "0.01"
@@ -57,9 +56,7 @@ def mock_args():
 
 
 arb_mode_happy_path_options = [
-    "single",
-    "multi",
-    "triangle",
+    "multi_pairwise_all",
     "multi_triangle",
     "b3_two_hop",
 ]

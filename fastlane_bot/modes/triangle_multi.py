@@ -1,5 +1,5 @@
 """
-Defines the Triangular arbitrage finder class
+Defines the multi-triangle arbitrage finder class
 
 [DOC-TODO-OPTIONAL-longer description in rst format]
 
@@ -8,79 +8,73 @@ Defines the Triangular arbitrage finder class
 All rights reserved.
 Licensed under MIT.
 """
-from typing import List, Any, Tuple, Union
+from typing import Any, List
+from itertools import product
 
 from fastlane_bot.modes.base_triangle import ArbitrageFinderTriangleBase
-from fastlane_bot.tools.cpc import CPCContainer
-from fastlane_bot.tools.optimizer import MargPOptimizer
-
 
 class ArbitrageFinderTriangleMulti(ArbitrageFinderTriangleBase):
-    """
-    Triangular arbitrage finder mode
-    """
+    def get_combos(self) -> List[Any]:
+        combos = []
+        all_carbon_curves = self.CCm.byparams(exchange="carbon_v1").curves
 
-    arb_mode = "multi_triangle"
+        for flt in self.flashloan_tokens:
+            non_flt_carbon_curves = [curve for curve in all_carbon_curves if flt not in curve.pair]
+            for non_flt_carbon_curve in non_flt_carbon_curves:
+                tkny = non_flt_carbon_curve.tkny
+                tknx = non_flt_carbon_curve.tknx
 
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
-        """
-        see base.py
-        """
-
-        if self.base_exchange != "carbon_v1":
-            raise ValueError("base_exchange must be carbon_v1 for `multi` mode")
-
-        if candidates is None:
-            candidates = []
-
-        combos = self.get_combos(self.flashloan_tokens, self.CCm, arb_mode=self.arb_mode)
-
-        for src_token, miniverse in combos:
-            try:
-                CC_cc = CPCContainer(miniverse)
-                O = MargPOptimizer(CC_cc)
-                pstart = self.build_pstart(CC_cc, CC_cc.tokens(), src_token)
-                r = O.optimize(src_token, params=dict(pstart=pstart))
-                trade_instructions_dic = r.trade_instructions(O.TIF_DICTS)
-                if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
-                    # Failed to converge
+                carbon_curves = self.CCm.bypairs(f"{tknx}/{tkny}").byparams(exchange="carbon_v1").curves
+                if len(carbon_curves) == 0:
                     continue
-                trade_instructions_df = r.trade_instructions(O.TIF_DFAGGR)
-                trade_instructions = r.trade_instructions()
 
-            except Exception as e:
-                self.ConfigObj.logger.info(f"[triangle multi] {e}")
-                continue
-            profit_src = -r.result
+                filtered_curves = {tkn : set(self.CCm.filter_pairs(onein=tkn)) for tkn in [tknx, tkny, flt]}
+                y_match_curves = self.CCm.bypairs(filtered_curves[tknx] & filtered_curves[flt]).curves
+                x_match_curves = self.CCm.bypairs(filtered_curves[tkny] & filtered_curves[flt]).curves
 
-            # Get the cids
-            cids = [ti["cid"] for ti in trade_instructions_dic]
+                y_match_other_curves = [curve for curve in y_match_curves if curve.params.exchange != "carbon_v1"]
+                if len(y_match_other_curves) == 0:
+                    continue
 
-            # Calculate the profit
-            profit = self.calculate_profit(src_token, profit_src, self.CCm, cids)
-            if str(profit) == "nan":
-                self.ConfigObj.logger.debug("profit is nan, skipping")
-                continue
+                x_match_other_curves = [curve for curve in x_match_curves if curve.params.exchange != "carbon_v1"]
+                if len(x_match_other_curves) == 0:
+                    continue
 
-            # Handle candidates based on conditions
-            candidates += self.handle_candidates(
-                best_profit,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
+                base_dir_one = [curve for curve in carbon_curves if curve.pair == carbon_curves[0].pair]
+                base_dir_two = [curve for curve in carbon_curves if curve.pair != carbon_curves[0].pair]
 
-            # Find the best operations
-            best_profit, ops = self.find_best_operations(
-                best_profit,
-                ops,
-                profit,
-                trade_instructions_df,
-                trade_instructions_dic,
-                src_token,
-                trade_instructions,
-            )
+                if len(base_dir_one) > 0:
+                    combos += get_miniverse_combos(y_match_other_curves, x_match_other_curves, base_dir_one, flt)
 
-        return candidates if self.result == self.AO_CANDIDATES else ops
+                if len(base_dir_two) > 0:
+                    combos += get_miniverse_combos(y_match_other_curves, x_match_other_curves, base_dir_two, flt)
+
+        return combos
+
+def get_miniverse_combos(
+    y_match_other_curves: List[Any],
+    x_match_other_curves: List[Any],
+    base_exchange_curves: List[Any],
+    flt: str
+):
+    """
+    Get miniverse for triangular arbitrage
+
+    Parameters
+    ----------
+    y_match_other_curves : list
+        List of curves that match the y token and are not on carbon
+    x_match_other_curves : list
+        List of curves that match the x token and are not on carbon
+    base_exchange_curves : list
+        List of curves on carbon
+    flt : str
+        Flashloan token
+
+    Returns
+    -------
+    A list of miniverse combos
+    """
+    curve_combos = list(product(y_match_other_curves, x_match_other_curves))
+    miniverses = [base_exchange_curves + list(combo) for combo in curve_combos]
+    return [(flt, miniverse) for miniverse in miniverses]

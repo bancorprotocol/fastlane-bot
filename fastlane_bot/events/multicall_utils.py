@@ -9,91 +9,11 @@ All rights reserved.
 Licensed under MIT.
 """
 from decimal import Decimal
-from typing import Dict, Any
-from typing import List, Tuple
+from typing import Any, List, Dict
 
 from fastlane_bot.config.multicaller import MultiCaller
 from fastlane_bot.events.pools import CarbonV1Pool
-from fastlane_bot.events.pools.base import Pool
-
-ONE = 2 ** 48
-
-
-def bit_length(value: int) -> int:
-    """
-    Get the bit length of a value.
-
-    Parameters
-    ----------
-    value: int
-        The value to get the bit length of.
-
-    Returns
-    -------
-    int
-        The bit length of the value.
-
-    """
-
-    return len(bin(value).lstrip("0b")) if value > 0 else 0
-
-
-def encode_float(value: int) -> int:
-    """
-    Encode a float value.
-
-    Parameters
-    ----------
-    value: int
-        The value to encode.
-
-    Returns
-    -------
-    int
-        The encoded value.
-
-    """
-    exponent = bit_length(value // ONE)
-    mantissa = value >> exponent
-    return mantissa | (exponent * ONE)
-
-
-def encode_rate(value: int) -> int:
-    """
-    Encode a rate value.
-
-    Parameters
-    ----------
-    value: int
-        The value to encode.
-
-    Returns
-    -------
-    int
-        The encoded value.
-
-    """
-    data = int(value.sqrt() * ONE)
-    length = bit_length(data // ONE)
-    return (data >> length) << length
-
-
-def encode_token_price(price: Decimal) -> int:
-    """
-    Encode a token price.
-
-    Parameters
-    ----------
-    price: Decimal
-        The price to encode.
-
-    Returns
-    -------
-    int
-        The encoded price.
-
-    """
-    return encode_float(encode_rate((price)))
+from fastlane_bot.utils import encodeFloat, encodeRate
 
 
 def get_pools_for_exchange(exchange: str, mgr: Any) -> List[Any]:
@@ -202,7 +122,6 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
         params["exchange_name"] = exchange
     elif exchange == "bancor_pol":
         p, tkn_balance = result
-        token_price = encode_token_price(Decimal(p[1]) / Decimal(p[0])) if p is not None else 0
         params = {
             "fee": "0.000",
             "fee_float": 0.000,
@@ -213,7 +132,7 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
             "y_0": tkn_balance,
             "z_0": tkn_balance,
             "A_0": 0,
-            "B_0": token_price,
+            "B_0": encodeFloat(encodeRate(Decimal(p[1]) / Decimal(p[0]))) if p is not None else 0,
             "y_1": 0,
             "z_1": 0,
             "A_1": 0,
