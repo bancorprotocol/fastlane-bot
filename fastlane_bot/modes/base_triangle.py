@@ -19,21 +19,22 @@ class ArbitrageFinderTriangleBase(ArbitrageFinderBase):
         combos = self.get_combos()
 
         for src_token, miniverse in combos:
+            container = CPCContainer(miniverse)
+            optimizer = MargPOptimizer(container)
+            params = self.get_params(container, container.tokens(), src_token)
+
             try:
-                container = CPCContainer(miniverse)
-                optimizer = MargPOptimizer(container)
-                params = self.get_params(container, container.tokens(), src_token)
                 optimization = optimizer.optimize(src_token, params=params)
-                trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
-                trade_instructions_df = optimization.trade_instructions(optimizer.TIF_DFAGGR)
             except Exception as e:
                 self.ConfigObj.logger.debug(f"[base_triangle] {e}")
                 continue
+
+            trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
             if trade_instructions_dic is None or len(trade_instructions_dic) < 3:
                 # Failed to converge
                 continue
 
-            profit = self.get_profit(src_token, optimization, trade_instructions_df)
+            profit = self.get_profit(src_token, optimization, optimization.trade_instructions(optimizer.TIF_DFAGGR))
             if profit is not None:
                 arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
 
