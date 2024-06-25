@@ -597,7 +597,7 @@ class BaseManager:
             ]
 
             # Fetching token addresses and converting them
-            tkn0_address, tkn1_address = pool_data["tkn0"], pool_data["tkn1"]
+            tkn0_address, tkn1_address = pool_data["tkn0_address"], pool_data["tkn1_address"]
 
             # Reconstructing the strategy object
             strategy = [strategy_id, None, [tkn0_address, tkn1_address], [order0, order1]]
