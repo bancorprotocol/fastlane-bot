@@ -331,6 +331,19 @@ class ContractsManager(BaseManager):
         tokens_filepath = os.path.normpath(
             f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv"
         )
+
+        self.log_path_exists("fastlane_bot")
+        self.log_path_exists("fastlane_bot/data")
+        self.log_path_exists("fastlane_bot/data/blockchain_data")
+        self.log_path_exists(f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}")
+        self.log_path_exists(f"fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/tokens.csv")
+        self.log_path_exists(self.prefix_path)
+        self.log_path_exists(f"{self.prefix_path}fastlane_bot")
+        self.log_path_exists(f"{self.prefix_path}fastlane_bot/data")
+        self.log_path_exists(f"{self.prefix_path}fastlane_bot/data/blockchain_data")
+        self.log_path_exists(f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}")
+        self.log_path_exists(f"{self.prefix_path}fastlane_bot/data/blockchain_data/{self.cfg.NETWORK}/token_detail")
+
         token_data = pd.read_csv(tokens_filepath)
         extra_info = glob(
             os.path.normpath(
@@ -366,6 +379,10 @@ class ContractsManager(BaseManager):
 
         def __str__(self):
             return self.message
+
+    def log_path_exists(self, path):
+        exists = os.path.exists(os.path.normpath(path))
+        self.cfg.logger.info(f"Filepath: {path}. Exists: {exists}")
 
     def _get_and_save_token_info_from_contract(
         self,
