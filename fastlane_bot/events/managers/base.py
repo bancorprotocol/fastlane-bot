@@ -574,8 +574,8 @@ class BaseManager:
             pool["cid"]
             for pool in self.pool_data
             if pool["exchange_name"] == exchange_name
-               and (pool["tkn0_address"], pool["tkn1_address"]) in pairs
-               or (pool["tkn1_address"], pool["tkn0_address"]) in pairs
+               and ((pool["tkn0_address"], pool["tkn1_address"]) in pairs
+               or (pool["tkn1_address"], pool["tkn0_address"]) in pairs)
         ]
         strategies = []
         for cid in cids:
