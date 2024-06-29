@@ -1294,7 +1294,7 @@ def get_start_block(
         elif mgr.tenderly_fork_id:
             return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, mgr.w3_tenderly.eth.block_number
         else:
-            return safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) - reorg_delay, None
+            return max(safe_int(max(block["last_updated_block"] for block in mgr.pool_data)) , last_block) - reorg_delay, None
 
 
 def setup_replay_from_block(mgr: Any, block_number: int) -> Tuple[str, int]:
