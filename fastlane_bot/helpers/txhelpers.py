@@ -31,6 +31,12 @@ from fastlane_bot.data.abi import ERC20_ABI
 MAX_UINT256 = 2 ** 256 - 1
 ETH_RESOLUTION = 10 ** 18
 
+GAS_PRICE_KEY = {
+    0: "gasPrice",
+    1: "gasPrice",
+    2: "maxFeePerGas",
+}
+
 @dataclass
 class TxHelpers:
     """
@@ -110,7 +116,7 @@ class TxHelpers:
 
         raw_tx = self._sign_transaction(tx)
 
-        gas_cost_wei = tx["gas"] * tx["maxFeePerGas"]
+        gas_cost_wei = tx["gas"] * tx[GAS_PRICE_KEY[self.cfg.network.TX_TYPE]]
         if self.cfg.network.GAS_ORACLE_ADDRESS:
             gas_cost_wei += self.cfg.GAS_ORACLE_CONTRACT.caller.getL1Fee(raw_tx)
 
@@ -158,7 +164,7 @@ class TxHelpers:
 
     def _create_transaction(self, contract, fn_name: str, args: list, value: int) -> dict:
         return {
-            "type": 2,
+            "type": self.cfg.network.TX_TYPE,
             "value": value,
             "chainId": self.chain_id,
             "from": self.wallet_address,
@@ -174,7 +180,7 @@ class TxHelpers:
             if tx["gas"] > result["gasUsed"] and "error" not in result:
                 tx["gas"] = result["gasUsed"]
                 tx["accessList"] = loads(self.cfg.w3.to_json(result["accessList"]))
-        tx.update(self.cfg.network.gas_strategy(self.cfg.w3))
+        tx.update(self.cfg.network.gas_strategy(self.cfg.w3, self.cfg.network.TX_TYPE))
 
     def _sign_transaction(self, tx: dict) -> str:
         return self.cfg.w3.eth.account.sign_transaction(tx, self.cfg.ETH_PRIVATE_KEY_BE_CAREFUL).rawTransaction.hex()

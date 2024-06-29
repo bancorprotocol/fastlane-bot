@@ -203,6 +203,7 @@ class ConfigNetwork(ConfigBase):
     # LINK_KEY = "LINK-86CA"
     # USDT_KEY = "USDT-1ec7"
     SELF_FUND = False
+    TX_TYPE = 2
 
     # ACCOUNTS SECTION
     #######################################################################################
@@ -285,13 +286,19 @@ class ConfigNetwork(ConfigBase):
     # HOOKS
     #######################################################################################
     @staticmethod
-    def gas_strategy(web3):
+    def gas_strategy(web3, tx_type):
         gas_price = web3.eth.gas_price # send `eth_gasPrice` request
-        max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
-        return {
-            "maxFeePerGas": gas_price + max_priority_fee,
-            "maxPriorityFeePerGas": max_priority_fee
-        }
+        if tx_type < 2:
+            return {
+                "gasPrice": gas_price
+            }
+        if tx_type == 2:
+            max_priority_fee = web3.eth.max_priority_fee # send `eth_maxPriorityFeePerGas` request
+            return {
+                "maxFeePerGas": gas_price + max_priority_fee,
+                "maxPriorityFeePerGas": max_priority_fee
+            }
+        raise Exception(f"Transaction type {tx_type} not supported")
 
     @classmethod
     def new(cls, network=None):
@@ -797,6 +804,8 @@ class _ConfigNetworkSei(ConfigNetwork):
     RPC_ENDPOINT = "https://evm-rpc.sei-apis.com/?x-apikey="
     WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_SEI")
 
+    TX_TYPE = 1
+
     network_df = get_multichain_addresses(network=NETWORK_NAME)
     FASTLANE_CONTRACT_ADDRESS = "0xC56Eb3d03C5D7720DAf33a3718affb9BcAb03FBc"
     MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
@@ -811,6 +820,7 @@ class _ConfigNetworkSei(ConfigNetwork):
     STABLECOIN_ADDRESS = "0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1"
 
     IS_INJECT_POA_MIDDLEWARE = False
+
     # Balancer
     BALANCER_VAULT_ADDRESS = "0xFB43069f6d0473B85686a85F4Ce4Fc1FD8F00875"
 
