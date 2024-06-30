@@ -1,5 +1,18 @@
 # Changelog
 
+## [v3.2.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.5) (2024-06-19)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.4...v3.2.5)
+
+- Add sei live info [\#679](https://github.com/bancorprotocol/fastlane-bot/pull/679) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
+Merged pull requests
+
+- Release candidate - Sei support [\#693](https://github.com/bancorprotocol/fastlane-bot/pull/693) ([zavelevsky](https://github.com/zavelevsky))
+- Add Jellyverse to Sei [\#691](https://github.com/bancorprotocol/fastlane-bot/pull/691) ([Lesigh-3100](https://github.com/Lesigh-3100))
+- BLOCK\_CHUNK\_SIZE\_MAP to 2000 for Sei to handle not seeing exception [\#685](https://github.com/bancorprotocol/fastlane-bot/pull/685) ([zavelevsky](https://github.com/zavelevsky))
+- Revert "removed Sei and multi\_triangle\_complete - temporarily" [\#669](https://github.com/bancorprotocol/fastlane-bot/pull/669) ([zavelevsky](https://github.com/zavelevsky))
+
 ## [v3.2.4](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.4) (2024-06-17)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.3...v3.2.4)
