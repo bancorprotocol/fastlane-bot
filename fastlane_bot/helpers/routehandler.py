@@ -1164,7 +1164,6 @@ class TxRouteHandler:
                 fee=curve.fee_float,
             )
 
-        amount_out = amount_out * Decimal("0.9999")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)

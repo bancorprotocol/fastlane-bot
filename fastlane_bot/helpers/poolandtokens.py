@@ -533,8 +533,11 @@ class PoolAndTokens:
             # evaluate if the price boundaries pa/pb overlap at one end # TODO check logic and remove duplicate logic if necessary
             prices_overlap = check_overlap(strategy_typed_args[0]['pa'], strategy_typed_args[0]['pb'], strategy_typed_args[1]['pa'], strategy_typed_args[1]['pb'])
 
+            # Prevents stable-stable strategies from being modified
+            not_little_fee = strategy_typed_args[0]['fee'] > 10
+
             # if the threshold is met and neither is a limit order and prices overlap then likely to be overlapping
-            is_overlapping = percent_component_met and no_limit_orders and prices_overlap
+            is_overlapping = percent_component_met and no_limit_orders and prices_overlap and not_little_fee
 
             if is_overlapping:
                 # calculate the geometric mean

@@ -219,9 +219,6 @@ class CarbonBot:
         scaled_best_trade_instructions_dic = [
             dict(x.items()) for x in best_trade_instructions_dic
         ]
-        for item in scaled_best_trade_instructions_dic:
-            if item["tknin"] == best_src_token:
-                item["amtin"] *= self.SCALING_FACTOR
 
         return scaled_best_trade_instructions_dic
 
