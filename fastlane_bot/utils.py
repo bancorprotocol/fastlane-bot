@@ -7,7 +7,6 @@ All rights reserved.
 Licensed under MIT.
 """
 from glob import glob
-from random import choice
 from os.path import join
 from decimal import Decimal
 
@@ -16,10 +15,6 @@ def safe_int(value) -> int:
     int_value = int(value)
     assert value == int_value, f"non-integer `float` value {value}"
     return int_value
-
-
-def rand_item(list_of_items: list, num_of_items: int) -> any:
-    return choice(list_of_items[:min(max(num_of_items, 1), len(list_of_items))])
 
 
 def find_latest_timestamped_folder(logging_path=None):

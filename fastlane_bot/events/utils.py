@@ -911,7 +911,6 @@ def handle_subsequent_iterations(
     arb_mode: str,
     bot: CarbonBot,
     flashloan_tokens: List[str],
-    randomizer: int,
     target_tokens: List[str] = None,
     logging_path: str = None,
     tenderly_uri: str = None,
@@ -929,8 +928,6 @@ def handle_subsequent_iterations(
         The bot object.
     flashloan_tokens : List[str]
         A list of flashloan tokens.
-    randomizer : int
-        The randomizer.
     target_tokens : List[str], optional
         A list of target tokens, by default None
     logging_path : str, optional
@@ -964,7 +961,6 @@ def handle_subsequent_iterations(
     bot.run(
         flashloan_tokens=flashloan_tokens,
         arb_mode=arb_mode,
-        randomizer=randomizer,
         logging_path=logging_path,
         replay_from_block=forked_from_block,
     )

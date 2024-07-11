@@ -33,7 +33,6 @@ def mock_args():
             self.logging_path = ""
             self.loglevel = "INFO"
             self.use_cached_events = 'False'
-            self.randomizer = "3"
             self.limit_bancor3_flashloan_tokens = 'True'
             self.default_min_profit_gas_token = "0.01"
             self.timeout = 1
@@ -79,7 +78,6 @@ exchanges_happy_path_options = [
     "carbon_v1,bancor_v3,bancor_v2",
     "carbon_v1,bancor_v3",
 ]
-randomizer_happy_path_options = [1, '2']
 blockchain_happy_path_options = ["ethereum", "coinbase_base"]
 
 @pytest.mark.parametrize("arb_mode", arb_mode_happy_path_options)
@@ -169,17 +167,6 @@ def test_timeout(timeout, mock_args, capsys):
     with open('output.txt', 'r') as f:
         output = f.read()
     assert f"timeout: {timeout}" in output
-
-@pytest.mark.parametrize("randomizer", randomizer_happy_path_options)
-def test_randomizer(randomizer, mock_args, capsys):
-    mock_args.randomizer = randomizer
-    with open('output.txt', 'w') as f:
-        with redirect_stderr(f):
-            main(mock_args)
-    # read the console output
-    with open('output.txt', 'r') as f:
-        output = f.read()
-    assert f"randomizer: {randomizer}" in output
 
 @pytest.mark.parametrize("blockchain", blockchain_happy_path_options)
 def test_blockchain(blockchain, mock_args, capsys):

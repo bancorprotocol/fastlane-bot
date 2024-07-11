@@ -104,16 +104,12 @@ class TxRouteHandler:
         self.ConfigObj = self.trade_instructions[0].ConfigObj
 
     @staticmethod
-    def custom_data_encoder(
-            agg_trade_instructions: List[TradeInstruction],
-    ) -> List[TradeInstruction]:
+    def custom_data_encoder(agg_trade_instructions: List[TradeInstruction]):
         for i in range(len(agg_trade_instructions)):
-            instr = agg_trade_instructions[i]
-            if instr.raw_txs == "[]":
-                instr.custom_data = "0x"
-                agg_trade_instructions[i] = instr
+            if agg_trade_instructions[i].raw_txs == "[]":
+                agg_trade_instructions[i].custom_data = "0x"
             else:
-                tradeInfo = eval(instr.raw_txs)
+                tradeInfo = eval(agg_trade_instructions[i].raw_txs)
                 tradeActions = []
                 for trade in tradeInfo:
                     tradeActions += [
@@ -140,9 +136,7 @@ class TxRouteHandler:
 
                 # Encode the extracted values using the ABI types
                 encoded_data = eth_abi.encode(all_types, values)
-                instr.custom_data = '0x' + str(encoded_data.hex())
-                agg_trade_instructions[i] = instr
-        return agg_trade_instructions
+                agg_trade_instructions[i].custom_data = '0x' + str(encoded_data.hex())
 
     def _to_route_struct(
             self,
@@ -859,7 +853,7 @@ class TxRouteHandler:
 
             amount_out = (amount_in * tkn1_amt * (1 - Decimal(curve.fee_float))) / (amount_in + tkn0_amt)
 
-        amount_out = amount_out * Decimal("0.9999")
+        amount_out = amount_out * Decimal("0.998")
         amount_out = TradeInstruction._quantize(amount_out, tkn_out_decimals)
         amount_in_wei = TradeInstruction._convert_to_wei(amount_in, tkn_in_decimals)
         amount_out_wei = TradeInstruction._convert_to_wei(amount_out, tkn_out_decimals)

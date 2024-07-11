@@ -95,7 +95,6 @@ def process_arguments(args):
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
         "use_cached_events": is_true,
-        "randomizer": int,
         "limit_bancor3_flashloan_tokens": is_true,
         "timeout": int_or_none,
         "replay_from_block": int_or_none,
@@ -224,7 +223,6 @@ def main(args: argparse.Namespace) -> None:
             polling_interval: {args.polling_interval}
             reorg_delay: {args.reorg_delay}
             use_cached_events: {args.use_cached_events}
-            randomizer: {args.randomizer}
             limit_bancor3_flashloan_tokens: {args.limit_bancor3_flashloan_tokens}
             timeout: {args.timeout}
             replay_from_block: {args.replay_from_block}
@@ -458,7 +456,6 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 arb_mode=args.arb_mode,
                 bot=bot,
                 flashloan_tokens=args.flashloan_tokens,
-                randomizer=args.randomizer,
                 target_tokens=args.target_tokens,
                 logging_path=args.logging_path,
                 tenderly_uri=tenderly_uri,
@@ -639,11 +636,6 @@ if __name__ == "__main__":
         "--use_cached_events",
         default='False',
         help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--randomizer",
-        default="3",
-        help="Set to the number of arb opportunities to pick from.",
     )
     parser.add_argument(
         "--limit_bancor3_flashloan_tokens",

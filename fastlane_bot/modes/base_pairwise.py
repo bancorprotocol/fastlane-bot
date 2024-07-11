@@ -42,7 +42,7 @@ class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
                     # Failed to converge
                     continue
 
-                profit = self.get_profit(src_token, optimization, optimization.trade_instructions(optimizer.TIF_DFAGGR))
+                profit = self.get_profit(src_token, optimization, trade_instructions_dic)
                 if profit is not None:
                     arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
 

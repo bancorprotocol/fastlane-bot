@@ -10,6 +10,7 @@ Licensed under MIT.
 """
 import abc
 from _decimal import Decimal
+from collections import defaultdict
 from typing import Any, List, Dict
 
 class ArbitrageFinderBase:
@@ -41,8 +42,8 @@ class ArbitrageFinderBase:
         """
         ...
 
-    def get_profit(self, src_token: str, optimization, trade_instructions_df):
-        if is_net_change_small(trade_instructions_df):
+    def get_profit(self, src_token: str, optimization, trade_instructions_dic):
+        if is_net_change_small(trade_instructions_dic):
             profit = self.calculate_profit(src_token, -optimization.result)
             if profit.is_finite() and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
                 return profit
@@ -77,8 +78,9 @@ class ArbitrageFinderBase:
         list2 = [1 / curve.p for curve in container2.curves]
         return (list1 + list2 + [None])[0]
 
-def is_net_change_small(trade_instructions_df) -> bool:
-    try:
-        return max(trade_instructions_df.iloc[-1]) < 1e-4
-    except Exception:
-        return False
+def is_net_change_small(trade_instructions_dic) -> bool:
+    amounts = defaultdict(float)
+    for ti in trade_instructions_dic:
+        amounts[ti["tknin"]] += ti["amtin"]
+        amounts[ti["tknout"]] += ti["amtout"]
+    return max(amounts.values()) < 1e-4

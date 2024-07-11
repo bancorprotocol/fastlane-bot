@@ -55,6 +55,8 @@ def split_carbon_trades(cfg: Config, trade_instructions: List[TradeInstruction])
             else:
                 carbon_exchanges[exchange_id] = [tx]
 
+        assert len(carbon_exchanges) > 0, f"Carbon trade instruction raw_txs = {trade_instruction.raw_txs}"
+
         for txs in carbon_exchanges.values():
             new_trade_instructions.append(
                 TradeInstruction(

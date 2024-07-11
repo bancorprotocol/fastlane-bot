@@ -224,7 +224,7 @@ def test_test_expected_output_bancorv2():
     flashloan_amount = int(trade_instructions[0].amtin_wei)
     
     # Encode the trade instructions
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(trade_instructions)
+    tx_route_handler.custom_data_encoder(trade_instructions)
     
     # Get the deadline
     deadline = bot._get_deadline(1)
@@ -233,9 +233,9 @@ def test_test_expected_output_bancorv2():
     route_struct = [
         asdict(rs)
         for rs in tx_route_handler.get_route_structs(
-            encoded_trade_instructions, deadline
+            trade_instructions, deadline
         )
     ]
     bancor_v2_converter_addresses = [pool["anchor"] for pool in state if pool["exchange_name"] in "bancor_v2"]
-    assert encoded_trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {encoded_trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
+    assert trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
     assert route_struct[0]['customAddress'] in bancor_v2_converter_addresses or route_struct[1]['customAddress'] in bancor_v2_converter_addresses, f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: anchor for Bancor V2 pool for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"

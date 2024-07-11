@@ -73,7 +73,6 @@ from .modes.pairwise_multi_pol import ArbitrageFinderMultiPairwisePol
 from .modes.triangle_multi import ArbitrageFinderTriangleMulti
 from .modes.triangle_multi_complete import ArbitrageFinderTriangleMultiComplete
 from .modes.triangle_bancor_v3_two_hop import ArbitrageFinderTriangleBancor3TwoHop
-from .utils import rand_item
 
 
 @dataclass
@@ -262,7 +261,6 @@ class CarbonBot:
         flashloan_tokens: List[str] = None,
         CCm: CPCContainer = None,
         arb_mode: str = None,
-        randomizer: int = 1,
         logging_path: str = None,
         replay_from_block: int = None,
     ):
@@ -277,8 +275,6 @@ class CarbonBot:
             The complete market data container
         arb_mode: str
             The arbitrage mode
-        randomizer: int
-            The number of top arbitrage opportunities to randomly choose from
         logging_path: str
             The logging path
         replay_from_block: int
@@ -299,19 +295,18 @@ class CarbonBot:
 
         self.ConfigObj.logger.info(f"[bot.run] Found {len(arb_opps)} eligible arb opportunities.")
 
-        arb_opp = rand_item(list_of_items=arb_opps, num_of_items=randomizer)
-
-        tx_hash, tx_receipt = self._handle_trade_instructions(arb_finder, arb_mode, arb_opp, replay_from_block)
-
-        if tx_hash:
-            tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
-            tx_details = json.dumps(tx_receipt, indent=4) if tx_receipt else "no receipt"
-            self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {tx_status}")
-
-            if logging_path:
-                filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                with open(os.path.join(logging_path, filename), "w") as f:
-                    f.write(f"{tx_hash} {tx_status}: {tx_details}")
+        for arb_opp in arb_opps:
+            is_profitable, tx_hash, tx_receipt = self._handle_trade_instructions(arb_finder, arb_opp, replay_from_block)
+            if not is_profitable:
+                break
+            if tx_hash:
+                tx_status = ["failed", "succeeded"][tx_receipt["status"]] if tx_receipt else "pending"
+                tx_details = json.dumps(tx_receipt, indent=4) if tx_receipt else "no receipt"
+                self.ConfigObj.logger.info(f"Arbitrage transaction {tx_hash} {tx_status}")
+                if logging_path:
+                    filename = f"tx_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+                    with open(os.path.join(logging_path, filename), "w") as f:
+                        f.write(f"{tx_hash} {tx_status}: {tx_details}")
 
     def calculate_profit(
         self,
@@ -356,10 +351,9 @@ class CarbonBot:
     def _handle_trade_instructions(
         self,
         arb_finder: ArbitrageFinderBase,
-        arb_mode: str,
         arb_opp: dict,
         replay_from_block: int = None
-    ) -> Tuple[Optional[str], Optional[dict]]:
+    ) -> Tuple[bool, Optional[str], Optional[dict]]:
         """
         Creates and executes the trade instructions
         
@@ -370,8 +364,6 @@ class CarbonBot:
         ----------
         arb_finder: ArbitrageFinderBase
             The arbitrage finder.
-        arb_mode: str
-            The arbitrage mode.
         arb_opp: dictionary
             The dictionary containing an arbitrage opportunity found by the Optimizer
         replay_from_block: int
@@ -379,6 +371,7 @@ class CarbonBot:
 
         Returns
         -------
+        - True if the profit is sufficiently high, False otherwise.
         - The hash of the transaction if submitted, None otherwise.
         - The receipt of the transaction if completed, None otherwise.
         """
@@ -450,11 +443,10 @@ class CarbonBot:
                 f"- Expected profit: {best_profit_gastkn}\n"
                 f"- Minimum profit:  {self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN}\n"
             )
-            return None, None
+            return False, None, None
 
         # Log the arbitrage details
         arb_info = [
-            f"arb mode = {arb_mode}",
             f"gas profit = {best_profit_gastkn}",
             f"usd profit = {best_profit_usd}",
             f"flashloan token = {fl_token_symbol}",
@@ -488,7 +480,7 @@ class CarbonBot:
         )
 
         # Encode the trade instructions
-        encoded_trade_instructions = tx_route_handler.custom_data_encoder(
+        tx_route_handler.custom_data_encoder(
             split_calculated_trade_instructions
         )
 
@@ -499,7 +491,7 @@ class CarbonBot:
         route_struct = [
             asdict(rs)
             for rs in tx_route_handler.get_route_structs(
-                trade_instructions=encoded_trade_instructions, deadline=deadline
+                trade_instructions=split_calculated_trade_instructions, deadline=deadline
             )
         ]
 
@@ -537,7 +529,7 @@ class CarbonBot:
                     expected_profit_usd=best_profit_usd,
                     flashloan_struct=flashloan_struct,
                 )
-                return tx_hash, tx_receipt
+                return True, tx_hash, tx_receipt
             except Exception as e:
                 if "less than block base fee" in str(e):
                     self.ConfigObj.logger.error(f"{e}; retrying...")

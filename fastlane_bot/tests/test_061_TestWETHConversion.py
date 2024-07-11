@@ -210,7 +210,7 @@ def test_wrap_unwrap_original():
         split_trades = split_carbon_trades(cfg, trade_instructions)
 
         # Encode the trade instructions
-        encoded_trade_instructions = tx_route_handler.custom_data_encoder(
+        tx_route_handler.custom_data_encoder(
             split_trades
         )
 
@@ -221,7 +221,7 @@ def test_wrap_unwrap_original():
         route_struct = [
             asdict(rs)
             for rs in tx_route_handler.get_route_structs(
-                encoded_trade_instructions, deadline
+                split_trades, deadline
             )
         ]
 
