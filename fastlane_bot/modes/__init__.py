@@ -24,13 +24,11 @@ that are defined in this module
 
 - ``ArbitrageFinderBase`` (``base``): fundamental base class
     - ``ArbitrageFinderPairwiseBase`` (``base_pairwise``): base class for pairwise arbitrages
-        - ``FindArbitrageSinglePairwise`` (``pairwise_single``)
-        - ``FindArbitrageMultiPairwise`` (``pairwise_multi``)
-        - ``FindArbitrageMultiPairwiseAll`` (``pairwise_multi_all``)
-        - ``FindArbitrageMultiPairwisePol`` (``pairwise_multi_pol``)
+        - ``ArbitrageFinderMultiPairwiseAll`` (``pairwise_multi_all``)
+        - ``ArbitrageFinderMultiPairwisePol`` (``pairwise_multi_pol``)
     - ``ArbitrageFinderTriangleBase`` (``base_triangle``): base class for triangle arbitrages    
-        - ``ArbitrageFinderTriangleSingle`` (``triangle_single``)
         - ``ArbitrageFinderTriangleMulti`` (``triangle_multi``)
+        - ``ArbitrageFinderTriangleMultiComplete`` (``triangle_multi_complete``)
         - ``ArbitrageFinderTriangleBancor3TwoHop`` (``triangle_bancor_v3_two_hop``)
 
 

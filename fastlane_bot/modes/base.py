@@ -9,310 +9,78 @@ All rights reserved.
 Licensed under MIT.
 """
 import abc
-from typing import Any, Tuple, Dict, List, Union
 from _decimal import Decimal
-import pandas as pd
-
-from fastlane_bot.tools.cpc import T
-from fastlane_bot.utils import num_format
-
+from collections import defaultdict
+from typing import Any, List, Dict
 
 class ArbitrageFinderBase:
     """
     Base class for all arbitrage finder modes
     """
 
-    AO_TOKENS = "tokens"
-    AO_CANDIDATES = "candidates"
-
-    def __init__(
-        self,
-        flashloan_tokens,
-        CCm,
-        mode="bothin",
-        result=AO_CANDIDATES,
-        ConfigObj: Any = None,
-        arb_mode: str = None,
-    ):
+    def __init__(self, flashloan_tokens, CCm, ConfigObj):
         self.flashloan_tokens = flashloan_tokens
         self.CCm = CCm
-        self.mode = mode
-        self.result = result
-        self.best_profit = 0
-        self.best_src_token = None
-        self.best_trade_instructions = None
-        self.best_trade_instructions_df = None
-        self.best_trade_instructions_dic = None
         self.ConfigObj = ConfigObj
-        self.base_exchange = "bancor_v3" if arb_mode == "bancor_v3" else "carbon_v1"
+
+    def find_combos(self) -> List[Any]:
+        return self.find_arbitrage()["combos"]
+
+    def find_arb_opps(self) -> List[Any]:
+        return self.find_arbitrage()["arb_opps"]
 
     @abc.abstractmethod
-    def find_arbitrage(
-        self,
-        candidates: List[Any] = None,
-        ops: Tuple = None,
-        best_profit: float = 0,
-        profit_src: float = 0,
-    ) -> Union[List, Tuple]:
+    def find_arbitrage(self) -> Dict[List[Any], List[Any]]:
         """
         See subclasses for details
 
-        Parameters
-        ----------
-        candidates : List[Any], optional
-            List of candidates, by default None
-        ops : Tuple, optional
-            Tuple of operations, by default None
-        best_profit : float, optional
-            Best profit so far, by default 0
-        profit_src : float, optional
-            Profit source, by default 0
-
         Returns
         -------
-        Union[List, Tuple]
-            If self.result == self.AO_CANDIDATES, it returns a list of candidates.
+        A dictionary with:
+        - A list of combinations
+        - A list of arbitrage opportunities
         """
-        pass
+        ...
 
-    def _set_best_ops(
-        self,
-        best_profit: float,
-        ops: Tuple,
-        profit: float,
-        src_token: str,
-        trade_instructions: Any,
-        trade_instructions_df: pd.DataFrame,
-        trade_instructions_dic: Dict[str, Any],
-    ) -> Tuple[float, Tuple]:
-        """
-        Set the best operations.
+    def get_profit(self, src_token: str, optimization, trade_instructions_dic):
+        if is_net_change_small(trade_instructions_dic):
+            profit = self.calculate_profit(src_token, -optimization.result)
+            if profit.is_finite() and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN:
+                return profit
+        return None
 
-        Parameters:
+    def calculate_profit(self, src_token: str, src_profit: float) -> Decimal:
+        if src_token not in [self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS]:
+            price = self.find_reliable_price(self.CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, src_token)
+            assert price is not None, f"No conversion rate for {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS} and {src_token}"
+            return Decimal(str(src_profit)) / Decimal(str(price))
+        return Decimal(str(src_profit))
 
-        """
-        self.ConfigObj.logger.debug("[modes.base._set_best_ops] *************")
-        self.ConfigObj.logger.debug(
-            f"[modes.base._set_best_ops] New best profit: {profit}"
-        )
+    def get_params(self, container, dst_tokens, src_token):
+        pstart = {src_token: 1}
+        for dst_token in dst_tokens:
+            if dst_token != src_token:
+                pstart[dst_token] = self.find_reliable_price(container, dst_token, src_token)
+                if pstart[dst_token] is None:
+                    return None
+        return {"pstart": pstart}
 
-        # Update the best profit and source token
-        best_profit = profit
-        best_src_token = src_token
+    def find_reliable_price(self, container, dst_token, src_token):
+        container1 = container.bytknx(dst_token).bytkny(src_token)
+        container2 = container.bytknx(src_token).bytkny(dst_token)
+        for exchange in ["bancor_v2", "bancor_v3", *self.ConfigObj.UNI_V2_FORKS, *self.ConfigObj.UNI_V3_FORKS]:
+            list1 = [curve.p / 1 for curve in container1.byparams(exchange=exchange).curves]
+            list2 = [1 / curve.p for curve in container2.byparams(exchange=exchange).curves]
+            price = (list1 + list2 + [None])[0]
+            if price is not None:
+                return price
+        list1 = [curve.p / 1 for curve in container1.curves]
+        list2 = [1 / curve.p for curve in container2.curves]
+        return (list1 + list2 + [None])[0]
 
-        # Update the best trade instructions
-        best_trade_instructions_df = trade_instructions_df
-        best_trade_instructions_dic = trade_instructions_dic
-        best_trade_instructions = trade_instructions
-
-        self.ConfigObj.logger.debug(
-            f"[modes.base._set_best_ops] best_trade_instructions_df: {best_trade_instructions_df}"
-        )
-
-        # Update the optimal operations
-        ops = (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        )
-
-        self.ConfigObj.logger.debug("[modes.base.calculate_profit] *************")
-
-        return best_profit, ops
-
-    def get_prices_simple(self, CCm, tkn0, tkn1):
-        curve_prices = [(x.params['exchange'],x.descr,x.cid,x.p) for x in CCm.bytknx(tkn0).bytkny(tkn1)]
-        curve_prices += [(x.params['exchange'],x.descr,x.cid,1/x.p) for x in CCm.bytknx(tkn1).bytkny(tkn0)]
-        return curve_prices
-    
-    # Global constant for 'carbon_v1' order
-    CARBON_SORTING_ORDER = float('inf')
-
-    # Create a sort order mapping function
-    def create_sort_order(self, sort_sequence):
-        # Create a dictionary mapping from sort sequence to indices, except for 'carbon_v1'
-        return {key: index for index, key in enumerate(sort_sequence) if key != 'carbon_v1'}
-
-    # Define the sort key function separately
-    def sort_key(self, item, sort_order):
-        # Check if the item is 'carbon_v1'
-        if item[0] in self.ConfigObj.CARBON_V1_FORKS:
-            return self.CARBON_SORTING_ORDER
-        # Otherwise, use the sort order from the dictionary, or a default high value
-        return sort_order.get(item[0], self.CARBON_SORTING_ORDER - 1)
-
-    # Define the custom sort function
-    def custom_sort(self, data, sort_sequence):
-        sort_order = self.create_sort_order(sort_sequence)
-        return sorted(data, key=lambda item: self.sort_key(item, sort_order))
-
-    def calculate_profit(
-        self,
-        src_token: str,
-        profit_src: float,
-        CCm: Any,
-        cids: List[str],
-        profit: int = 0,
-    ) -> float:
-        """
-        Calculate profit based on the source token.
-        """
-
-        best_profit_fl_token = profit_src
-        if src_token not in [
-            self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS,
-            self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS,
-        ]:
-            if src_token == self.ConfigObj.NATIVE_GAS_TOKEN_ADDRESS:
-                fl_token_with_weth = self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS
-            else:
-                fl_token_with_weth = src_token
-
-            sort_sequence = ['bancor_v2','bancor_v3','uniswap_v2','uniswap_v3']
-            price_curves = self.get_prices_simple(CCm, self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS, fl_token_with_weth)
-            sorted_price_curves = self.custom_sort(price_curves, sort_sequence)
-            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sort_sequence] {sort_sequence}")
-            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit price_curves] {price_curves}")
-            self.ConfigObj.logger.debug(f"[modes.base.calculate_profit sorted_price_curves] {sorted_price_curves}")
-            if len(sorted_price_curves)>0:
-                fltkn_eth_conversion_rate = sorted_price_curves[0][-1]
-                best_profit_eth = Decimal(str(best_profit_fl_token)) / Decimal(str(fltkn_eth_conversion_rate))
-                self.ConfigObj.logger.debug(f"[modes.base.calculate_profit] {src_token, best_profit_fl_token, fltkn_eth_conversion_rate, best_profit_eth}")
-            else:
-                self.ConfigObj.logger.error(
-                    f"[modes.base.calculate_profit] Failed to get conversion rate for {fl_token_with_weth} and {self.ConfigObj.WRAPPED_GAS_TOKEN_ADDRESS}. Raise"
-                )
-                raise
-        else:
-            best_profit_eth = best_profit_fl_token
-        return best_profit_eth
-
-    @staticmethod
-    def get_netchange(trade_instructions_df: pd.DataFrame) -> List[float]:
-        """
-        Get the net change from the trade instructions.
-        """
-        try:
-            return trade_instructions_df.iloc[-1]
-        except Exception:
-            return [500]  # an arbitrary large number
-
-    def handle_candidates(
-        self,
-        best_profit: float,
-        profit: float,
-        trade_instructions_df: pd.DataFrame,
-        trade_instructions_dic: Dict[str, Any],
-        src_token: str,
-        trade_instructions: Any,
-    ) -> List[Tuple[float, pd.DataFrame, Dict[str, Any], str, Any]]:
-        """
-        Handle candidate addition based on conditions.
-
-        Parameters:
-        ----------
-        best_profit : float
-            Best profit
-        profit : float
-            Profit
-        trade_instructions_df : pd.DataFrame
-            Trade instructions dataframe
-        trade_instructions_dic : dict
-            Trade instructions dictionary
-        src_token : str
-            Source token
-        trade_instructions : any
-            Trade instructions
-
-        Returns:
-        -------
-        candidates : list
-            Candidates
-        """
-        netchange = self.get_netchange(trade_instructions_df)
-        condition_zeros_one_token = max(netchange) < 1e-4
-
-        if (
-            condition_zeros_one_token
-            and profit > self.ConfigObj.DEFAULT_MIN_PROFIT_GAS_TOKEN
-        ):  # candidate regardless if profitable
-            return [
-                (
-                    profit,
-                    trade_instructions_df,
-                    trade_instructions_dic,
-                    src_token,
-                    trade_instructions,
-                )
-            ]
-        return []
-
-    def find_best_operations(
-        self,
-        best_profit: float,
-        ops: Tuple[float, pd.DataFrame, Dict[str, Any], str, Any],
-        profit: float,
-        trade_instructions_df: pd.DataFrame,
-        trade_instructions_dic: Dict[str, Any],
-        src_token: str,
-        trade_instructions: Any,
-    ) -> Tuple[float, Tuple[float, pd.DataFrame, Dict[str, Any], str, Any]]:
-        """
-        Find the best operations based on conditions.
-
-        Parameters:
-        ----------
-        best_profit : float
-            Best profit
-        ops : tuple
-            Operations
-        profit : float
-            Profit
-        trade_instructions_df : pd.DataFrame
-            Trade instructions dataframe
-        trade_instructions_dic : dict
-            Trade instructions dictionary
-        src_token : str
-            Source token
-        trade_instructions : any
-            Trade instructions
-
-        Returns:
-        -------
-        best_profit : float
-            Best profit
-        ops : tuple
-            Operations
-        """
-        netchange = self.get_netchange(trade_instructions_df)
-        condition_better_profit = profit > best_profit
-        condition_zeros_one_token = max(netchange) < 1e-4
-        if condition_better_profit and condition_zeros_one_token:
-            return self._set_best_ops(
-                best_profit,
-                ops,
-                profit,
-                src_token,
-                trade_instructions,
-                trade_instructions_df,
-                trade_instructions_dic,
-            )
-        return best_profit, ops
-
-    def _check_limit_flashloan_tokens_for_bancor3(self):
-        """
-        Limit the flashloan tokens for bancor v3.
-        """
-        fltkns = self.CCm.byparams(exchange="bancor_v3").tknys()
-        if self.ConfigObj.LIMIT_BANCOR3_FLASHLOAN_TOKENS:
-            # Filter out tokens that are not in the existing flashloan_tokens list
-            self.flashloan_tokens = [
-                tkn for tkn in fltkns if tkn in self.flashloan_tokens
-            ]
-            self.ConfigObj.logger.info(
-                f"[modes.base._check_limit_flashloan_tokens_for_bancor3] limiting flashloan_tokens to {self.flashloan_tokens}"
-            )
-        else:
-            self.flashloan_tokens = fltkns
+def is_net_change_small(trade_instructions_dic) -> bool:
+    amounts = defaultdict(float)
+    for ti in trade_instructions_dic:
+        amounts[ti["tknin"]] += ti["amtin"]
+        amounts[ti["tknout"]] += ti["amtout"]
+    return max(amounts.values()) < 1e-4

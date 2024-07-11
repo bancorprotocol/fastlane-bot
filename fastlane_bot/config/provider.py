@@ -139,7 +139,7 @@ class _ConfigProviderTenderly(ConfigProvider):
             provider_url=self.RPC_URL,
             provider_name="tenderly",
         )
-        self.connection.connect_network()
+        self.connection.connect_network(network.IS_INJECT_POA_MIDDLEWARE)
         self.w3 = self.connection.web3
 
         self.BANCOR_ARBITRAGE_CONTRACT = self.w3.eth.contract(

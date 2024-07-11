@@ -17,6 +17,7 @@ from web3.contract import Contract
 import web3.exceptions
 
 from fastlane_bot.data.abi import ERC20_ABI, BANCOR_POL_ABI
+from fastlane_bot.utils import encodeFloat, encodeRate
 from fastlane_bot.events.pools.base import Pool
 from ..interfaces.event import Event
 from _decimal import Decimal
@@ -29,7 +30,6 @@ class BancorPolPool(Pool):
     """
 
     exchange_name: str = "bancor_pol"
-    ONE = 2**48
     contract: Contract = None
     BANCOR_POL_ADDRESS = "0xD06146D292F9651C1D7cf54A3162791DFc2bEf46"
 
@@ -122,8 +122,6 @@ class BancorPolPool(Pool):
         except web3.exceptions.BadFunctionCallOutput:
             print(f"BadFunctionCallOutput: {tkn0}")
 
-        token_price = Decimal(p1) / Decimal(p0)
-
         params = {
             "fee": "0.000",
             "fee_float": 0.000,
@@ -134,7 +132,7 @@ class BancorPolPool(Pool):
             "y_0": tkn_balance,
             "z_0": tkn_balance,
             "A_0": 0,
-            "B_0": int(str(self.encode_token_price(token_price))),
+            "B_0": encodeFloat(encodeRate(Decimal(p1) / Decimal(p0))),
         }
         for key, value in params.items():
             self.state[key] = value
@@ -174,24 +172,6 @@ class BancorPolPool(Pool):
             else:
                 erc20_contract = w3.eth.contract(abi=ERC20_ABI,address=tkn0)
             return erc20_contract.caller.balanceOf(contract.address)
-
-
-    @staticmethod
-    def bitLength(value):
-        return len(bin(value).lstrip("0b")) if value > 0 else 0
-
-    def encodeFloat(self, value):
-        exponent = self.bitLength(value // self.ONE)
-        mantissa = value >> exponent
-        return mantissa | (exponent * self.ONE)
-
-    def encodeRate(self, value):
-        data = int(value.sqrt() * self.ONE)
-        length = self.bitLength(data // self.ONE)
-        return (data >> length) << length
-
-    def encode_token_price(self, price):
-        return self.encodeFloat(self.encodeRate((price)))
 
     def update_erc20_balance(self, token_contract, address) -> dict:
         """

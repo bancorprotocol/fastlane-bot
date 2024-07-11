@@ -20,7 +20,7 @@ from fastlane_bot.events.interface import QueryInterface
 from fastlane_bot.events.managers.manager import Manager
 from fastlane_bot.events.interface import QueryInterface
 from joblib import Parallel, delayed
-from fastlane_bot.tools.cpc import ConstantProductCurve as CPC, T
+from fastlane_bot.tools.cpc import ConstantProductCurve as CPC
 from dataclasses import asdict
 import math
 import json
@@ -132,8 +132,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi"
-
 
 # ------------------------------------------------------------
 # Test      050
@@ -155,18 +153,8 @@ def test_test_min_profit():
 def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
-    arb_finder = bot._get_arb_finder("multi")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_TOKENS,
-                ConfigObj=bot.ConfigObj,
-            )
-    all_tokens, combos = finder.find_arbitrage()
-    assert type(all_tokens) == set, f"[NBTest_50_TestBancorV2] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
-    assert type(combos) == list, f"[NBTest_50_TestBancorV2] combos is wrong data type. Expected list, found: {type(combos)}"
-    assert len(all_tokens) > 100, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    combos = arb_finder.find_combos()
     assert len(combos) > 1000, f"[NBTest_50_TestBancorV2] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
     
     
@@ -179,123 +167,64 @@ def test_test_combos_and_tokens():
 def test_test_expected_output_bancorv2():
 # ------------------------------------------------------------
     
-    # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    arb_opps = arb_finder.find_arb_opps()
+
     arb_with_bancor_v2 = []
-    for arb_opp in r:
+    for arb_opp in arb_opps:
         pools = []
-        for pool in arb_opp[2]:
+        for pool in arb_opp["trade_instructions_dic"]:
             pools += [curve for curve in CCm if curve.cid == pool['cid']]
         for pool in pools:
             if pool.params['exchange'] == "bancor_v2":
                 arb_with_bancor_v2.append(arb_opp)
     
-    assert len(r) >= 27, f"[NBTest_50_TestBancorV2] Expected at least 27 arb opps, found {len(r)}"
-    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"            
-    
-    # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
-    arb_with_bancor_v2 = []
-    for arb_opp in r:
-        pools = []
-        for pool in arb_opp[2]:
-            pools += [curve for curve in CCm if curve.cid == pool['cid']]
-        for pool in pools:
-            if pool.params['exchange'] == "bancor_v2":
-                arb_with_bancor_v2.append(arb_opp)
-    
+    assert len(arb_opps) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(arb_opps)}"
+    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
+
     # get specific arb for tests
     test_arb = arb_with_bancor_v2[0]
     
-    (
-        best_profit,
-        best_trade_instructions_df,
-        best_trade_instructions_dic,
-        best_src_token,
-        best_trade_instructions,
-    ) = test_arb
+    src_token = test_arb["src_token"]
+    trade_instructions_dic = test_arb["trade_instructions_dic"]
     
     # Order the trade instructions
-    (
-        ordered_trade_instructions_dct,
-        tx_in_count,
-    ) = bot._simple_ordering_by_src_token(
-        best_trade_instructions_dic, best_src_token
-    )
+    ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
     
     # Scale the trade instructions
-    ordered_scaled_dcts = bot._basic_scaling(
-        ordered_trade_instructions_dct, best_src_token
-    )
+    ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
     
     # Convert the trade instructions
-    ordered_trade_instructions_objects = bot._convert_trade_instructions(
-        ordered_scaled_dcts
-    )
+    ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
     
     # Create the tx route handler
-    tx_route_handler = TxRouteHandler(
-        trade_instructions=ordered_trade_instructions_objects
-    )
+    tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
     
     # Aggregate the carbon trades
-    agg_trade_instructions = (
+    trade_instructions = (
         tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-        if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+        if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
         else ordered_trade_instructions_objects
     )
     
     # Calculate the trade instructions
-    calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(
-        agg_trade_instructions
-    )
+    tx_route_handler.calculate_trade_outputs(trade_instructions)
     
     # Aggregate multiple Bancor V3 trades into a single trade
-    calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
-        calculated_trade_instructions
-    )
+    tx_route_handler.aggregate_bancor_v3_trades(trade_instructions)
     
     # Get the flashloan token
-    fl_token = fl_token_with_weth = calculated_trade_instructions[0].tknin_address
+    fl_token = trade_instructions[0].tknin_address
     
     # If the flashloan token is WETH, then use ETH
-    if fl_token == T.WETH:
-        fl_token = T.NATIVE_ETH
-    
-    best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(calculated_trade_instructions)
-    
-    # Use helper function to calculate profit
-    best_profit, flt_per_bnt, profit_usd = bot.calculate_profit(
-        CCm, best_profit, fl_token,
-    )
+    if fl_token == C.network.WETH_ADDRESS:
+        fl_token = C.network.ETH_ADDRESS
     
     # Get the flashloan amount and token address
-    flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-    flashloan_token_address = bot.ConfigObj.w3.to_checksum_address(
-        bot.db.get_token(tkn_address=fl_token).address
-    )
+    flashloan_amount = int(trade_instructions[0].amtin_wei)
     
     # Encode the trade instructions
-    encoded_trade_instructions = tx_route_handler.custom_data_encoder(
-        calculated_trade_instructions
-    )
+    tx_route_handler.custom_data_encoder(trade_instructions)
     
     # Get the deadline
     deadline = bot._get_deadline(1)
@@ -304,17 +233,9 @@ def test_test_expected_output_bancorv2():
     route_struct = [
         asdict(rs)
         for rs in tx_route_handler.get_route_structs(
-            encoded_trade_instructions, deadline
+            trade_instructions, deadline
         )
     ]
-    b2pools = [pool['anchor'] for pool in mgr.pool_data if pool["exchange_name"] in "bancor_v2"]
     bancor_v2_converter_addresses = [pool["anchor"] for pool in state if pool["exchange_name"] in "bancor_v2"]
-    assert arb_finder.__name__ == "FindArbitrageMultiPairwiseAll", f"[NBTest_50_TestBancorV2] Expected arb_finder class name name = FindArbitrageMultiPairwise, found {arb_finder.__name__}"
-    assert len(r) > 30, f"[NBTest_50_TestBancorV2] Expected at least 30 arb opps, found {len(r)}"
-    assert len(arb_with_bancor_v2) >= 3, f"[NBTest_50_TestBancorV2] Expected at least 3 arb opps with Bancor V2 pools, found {len(arb_with_bancor_v2)}"
-    assert encoded_trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {encoded_trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
+    assert trade_instructions[0].amtin_wei == flashloan_amount, f"[NBTest_50_TestBancorV2] First trade in should match flashloan amount, {trade_instructions[0].amtin_wei} does not = {flashloan_amount}"
     assert route_struct[0]['customAddress'] in bancor_v2_converter_addresses or route_struct[1]['customAddress'] in bancor_v2_converter_addresses, f"[NBTest_50_TestBancorV2] customAddress for Bancor V2.1 trade must be converter token address, expected: anchor for Bancor V2 pool for one address, found: {route_struct[0]['customAddress']} and {route_struct[1]['customAddress']}"
-    # -
-    
-    
-    

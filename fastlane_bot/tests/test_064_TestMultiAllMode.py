@@ -128,8 +128,6 @@ flashloan_tokens = bot.RUN_FLASHLOAN_TOKENS
 CCm = bot.get_curves()
 pools = db.get_pool_data_with_tokens()
 
-arb_mode = "multi_pairwise_all"
-
 
 # ------------------------------------------------------------
 # Test      064
@@ -145,37 +143,14 @@ def test_test_min_profit():
 # ------------------------------------------------------------
 # Test      064
 # File      test_064_TestMultiAllMode.py
-# Segment   Test_get_arb_finder
-# ------------------------------------------------------------
-def test_test_get_arb_finder():
-# ------------------------------------------------------------
-    
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    assert arb_finder.__name__ == "FindArbitrageMultiPairwiseAll", f"[NBTest64 TestMultiPairwiseAll Mode] Expected arb_finder class name name = FindArbitrageMultiPairwiseAll, found {arb_finder.__name__}"
-    
-
-# ------------------------------------------------------------
-# Test      064
-# File      test_064_TestMultiAllMode.py
 # Segment   Test_Combos_and_Tokens
 # ------------------------------------------------------------
 def test_test_combos_and_tokens():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_TOKENS,
-                ConfigObj=bot.ConfigObj,
-            )
-    all_tokens, combos = finder.find_arbitrage()
-    
-    assert type(all_tokens) == set, f"[NBTest64 TestMultiPairwiseAll Mode] all_tokens is wrong data type. Expected set, found: {type(all_tokens)}"
-    assert type(combos) == list, f"[NBTest64 TestMultiPairwiseAll Mode] combos is wrong data type. Expected list, found: {type(combos)}"
-    assert len(all_tokens) > 100, f"[NBTest64 TestMultiPairwiseAll Mode] Using wrong dataset, expected at least 100 tokens, found {len(all_tokens)}"
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    combos = arb_finder.find_combos()
     assert len(combos) > 1000, f"[NBTest64 TestMultiPairwiseAll Mode] Using wrong dataset, expected at least 100 combos, found {len(combos)}"
     # -
     
@@ -189,30 +164,16 @@ def test_test_expected_output():
 # ------------------------------------------------------------
     
     # +
-    arb_finder = bot._get_arb_finder("multi_pairwise_all")
-    finder = arb_finder(
-                flashloan_tokens=flashloan_tokens,
-                CCm=CCm,
-                mode="bothin",
-                result=arb_finder.AO_CANDIDATES,
-                ConfigObj=bot.ConfigObj,
-            )
-    r = finder.find_arbitrage()
+    arb_finder = bot.get_arb_finder("multi_pairwise_all", flashloan_tokens=flashloan_tokens, CCm=CCm)
+    arb_opps = arb_finder.find_arb_opps()
     
     multi_carbon_count = 0
     carbon_wrong_direction_count = 0
-    for arb in r:
-        (
-                best_profit,
-                best_trade_instructions_df,
-                best_trade_instructions_dic,
-                best_src_token,
-                best_trade_instructions,
-            ) = arb
-        if len(best_trade_instructions_dic) > 2:
+    for arb_opp in arb_opps:
+        if len(arb_opp["trade_instructions_dic"]) > 2:
             multi_carbon_count += 1
             carbon_tkn_in = None
-            for trade in best_trade_instructions_dic:
+            for trade in arb_opp["trade_instructions_dic"]:
                 if "-" in trade["cid"]:
                     if carbon_tkn_in is None:
                         carbon_tkn_in = trade["tknin"]
@@ -222,7 +183,7 @@ def test_test_expected_output():
     
     
     
-    assert len(r) >= 25, f"[NBTest64 TestMultiPairwiseAll Mode] Expected at least 25 arbs, found {len(r)}"
+    assert len(arb_opps) >= 25, f"[NBTest64 TestMultiPairwiseAll Mode] Expected at least 25 arb opps, found {len(arb_opps)}"
     assert multi_carbon_count > 0, f"[NBTest64 TestMultiPairwiseAll Mode] Not finding arbs with multiple Carbon curves."
     assert carbon_wrong_direction_count == 6, f"[NBTest64 TestMultiPairwiseAll Mode] Expected 6 Carbon curves to be in the opposite direction."
     # -

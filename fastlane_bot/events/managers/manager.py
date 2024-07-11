@@ -54,9 +54,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             # StrategyCreated events get appended to this list to be processed in the async workflow (see main.py),
             # to gather any currently unknown fee and token info. Then the event will be reprocessed in this method
             # and the pool data liquidity will be updated at that time (second pass).
-            self.pools_to_add_from_contracts.append(
-                (addr, ex_name, event, key, key_value)
-            )
+            self.pools_to_add_from_contracts.append(event)
             return
 
         if "descr" not in pool_info:
@@ -246,8 +244,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
 
     def update_remaining_pools(self):
         remaining_pools = []
-        all_events = [pool[2] for pool in self.pools_to_add_from_contracts]
-        for event in all_events:
+        for event in self.pools_to_add_from_contracts:
             addr = self.web3.to_checksum_address(event.address)
             ex_name = self.exchange_name_from_event(event)
             if not ex_name:
@@ -258,7 +255,7 @@ class Manager(PoolManager, EventManager, ContractsManager):
             pool_info = self.get_pool_info(key, key_value, ex_name)
 
             if not pool_info:
-                remaining_pools.append((addr, ex_name, event, key, key_value))
+                remaining_pools.append(event)
 
         random.shuffle(remaining_pools)
         self.pools_to_add_from_contracts = remaining_pools

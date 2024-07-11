@@ -9,7 +9,6 @@ from fastlane_bot.events.event_gatherer import EventGatherer
 from fastlane_bot.exceptions import ReadOnlyException, FlashloanUnavailableException
 from fastlane_bot.events.version_utils import check_version_requirements
 from fastlane_bot.pool_finder import PoolFinder
-from fastlane_bot.tools.cpc import T
 
 check_version_requirements(required_version="6.11.0", package_name="web3")
 
@@ -60,6 +59,18 @@ from fastlane_bot.utils import find_latest_timestamped_folder
 from run_blockchain_terraformer import terraform_blockchain
 import argparse
 
+from fastlane_bot import ConfigNetwork
+default_flashloan_tokens = [
+    ConfigNetwork.LINK_ADDRESS,
+    ConfigNetwork.ETH_ADDRESS,
+    ConfigNetwork.BNT_ADDRESS,
+    ConfigNetwork.WBTC_ADDRESS,
+    ConfigNetwork.DAI_ADDRESS,
+    ConfigNetwork.USDC_ADDRESS,
+    ConfigNetwork.USDT_ADDRESS,
+    ConfigNetwork.WETH_ADDRESS,
+]
+
 load_dotenv()
 
 
@@ -84,8 +95,6 @@ def process_arguments(args):
         "alchemy_max_block_fetch": int,
         "reorg_delay": int,
         "use_cached_events": is_true,
-        "run_data_validator": is_true,
-        "randomizer": int,
         "limit_bancor3_flashloan_tokens": is_true,
         "timeout": int_or_none,
         "replay_from_block": int_or_none,
@@ -214,8 +223,6 @@ def main(args: argparse.Namespace) -> None:
             polling_interval: {args.polling_interval}
             reorg_delay: {args.reorg_delay}
             use_cached_events: {args.use_cached_events}
-            run_data_validator: {args.run_data_validator}
-            randomizer: {args.randomizer}
             limit_bancor3_flashloan_tokens: {args.limit_bancor3_flashloan_tokens}
             timeout: {args.timeout}
             replay_from_block: {args.replay_from_block}
@@ -434,7 +441,7 @@ def run(mgr, args, tenderly_uri=None) -> None:
             bot = init_bot(mgr)
 
             if args.use_specific_exchange_for_target_tokens is not None:
-                target_tokens = bot.get_tokens_in_exchange(
+                target_tokens = bot.db.get_tokens_from_exchange(
                     exchange_name=args.use_specific_exchange_for_target_tokens
                 )
                 mgr.cfg.logger.info(
@@ -449,12 +456,8 @@ def run(mgr, args, tenderly_uri=None) -> None:
                 arb_mode=args.arb_mode,
                 bot=bot,
                 flashloan_tokens=args.flashloan_tokens,
-                randomizer=args.randomizer,
-                run_data_validator=args.run_data_validator,
                 target_tokens=args.target_tokens,
-                loop_idx=loop_idx,
                 logging_path=args.logging_path,
-                replay_from_block=replay_from_block,
                 tenderly_uri=tenderly_uri,
                 mgr=mgr,
                 forked_from_block=forked_from_block,
@@ -585,20 +588,17 @@ if __name__ == "__main__":
         default="multi_pairwise_all",
         help="See arb_mode in bot.py",
         choices=[
-            "single",
-            "multi",
-            "triangle",
             "multi_triangle",
+            "multi_triangle_complete",
             "b3_two_hop",
             "multi_pairwise_pol",
-            "multi_pairwise_all"
+            "multi_pairwise_all",
         ],
     )
     parser.add_argument(
         "--flashloan_tokens",
-        default=f"{T.LINK},{T.NATIVE_ETH},{T.BNT},{T.WBTC},{T.DAI},{T.USDC},{T.USDT},{T.WETH}",
-        help="The --flashloan_tokens flag refers to those token denominations which the bot can take "
-             "a flash loan in.",
+        default=",".join(default_flashloan_tokens),
+        help="Tokens in which the bot can take a flash-loan",
     )
     parser.add_argument(
         "--n_jobs", default=-1, help="Number of parallel jobs to run"
@@ -636,16 +636,6 @@ if __name__ == "__main__":
         "--use_cached_events",
         default='False',
         help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--run_data_validator",
-        default='False',
-        help="Set to True for debugging / testing. Set to False for production.",
-    )
-    parser.add_argument(
-        "--randomizer",
-        default="3",
-        help="Set to the number of arb opportunities to pick from.",
     )
     parser.add_argument(
         "--limit_bancor3_flashloan_tokens",

@@ -23,7 +23,6 @@ from fastlane_bot.bot import CarbonBot
 from fastlane_bot.helpers import TxRouteHandler
 from fastlane_bot.events.exchanges import UniswapV2, UniswapV3, CarbonV1, BancorV3
 
-from fastlane_bot.utils import num_format
 from fastlane_bot.helpers import add_wrap_or_unwrap_trades_to_route, split_carbon_trades
 from fastlane_bot.events.managers.manager import Manager
 from dataclasses import asdict
@@ -172,112 +171,46 @@ pools = db.get_pool_data_with_tokens()
 # ## Test_Wrap_Unwrap_Gas_Token_In_Route_Struct
 
 # +
-arb_mode = "multi"
-
-arb_finder = bot._get_arb_finder(arb_mode)
-finder = arb_finder(
-    flashloan_tokens=flashloan_tokens,
-    CCm=CCm,
-    mode="bothin",
-    result=arb_finder.AO_CANDIDATES,
-    ConfigObj=bot.ConfigObj,
-)
-r = finder.find_arbitrage()
-
-r = [arb for arb in r if len(arb[2]) >= 2]
-r.sort(key=lambda x: x[0], reverse=True)
+arb_mode = "multi_pairwise_all"
 
 # -
 def test_wrap_unwrap_original():
-    for arb in r:
+    arb_finder = bot.get_arb_finder(arb_mode, flashloan_tokens=flashloan_tokens, CCm=CCm)
 
-        (
-            best_profit,
-            best_trade_instructions_df,
-            best_trade_instructions_dic,
-            best_src_token,
-            best_trade_instructions,
-        ) = arb
+    for arb_opp in arb_finder.find_arb_opps():
+        src_token = arb_opp["src_token"]
+        trade_instructions_dic = arb_opp["trade_instructions_dic"]
 
         # Order the trade instructions
-        (
-            ordered_trade_instructions_dct,
-            tx_in_count,
-        ) = bot._simple_ordering_by_src_token(
-            best_trade_instructions_dic, best_src_token
-        )
+        ordered_trade_instructions_dct = bot._simple_ordering_by_src_token(trade_instructions_dic, src_token)
 
         # Scale the trade instructions
-        ordered_scaled_dcts = bot._basic_scaling(
-            ordered_trade_instructions_dct, best_src_token
-        )
+        ordered_scaled_dcts = bot._basic_scaling(ordered_trade_instructions_dct, src_token)
 
         # Convert the trade instructions
-        ordered_trade_instructions_objects = bot._convert_trade_instructions(
-            ordered_scaled_dcts
-        )
+        ordered_trade_instructions_objects = bot._convert_trade_instructions(ordered_scaled_dcts)
 
         # Create the tx route handler
-        tx_route_handler = TxRouteHandler(
-            trade_instructions=ordered_trade_instructions_objects
-        )
+        tx_route_handler = TxRouteHandler(trade_instructions=ordered_trade_instructions_objects)
 
         # Aggregate the carbon trades
-        agg_trade_instructions = (
+        trade_instructions = (
             tx_route_handler.aggregate_carbon_trades(ordered_trade_instructions_objects)
-            if bot._carbon_in_trade_route(ordered_trade_instructions_objects)
+            if any(trade.is_carbon for trade in ordered_trade_instructions_objects)
             else ordered_trade_instructions_objects
         )
 
         # Calculate the trade instructions
-        calculated_trade_instructions = tx_route_handler.calculate_trade_outputs(trade_instructions=agg_trade_instructions)
+        tx_route_handler.calculate_trade_outputs(trade_instructions)
 
         # Aggregate multiple Bancor V3 trades into a single trade
-        calculated_trade_instructions = tx_route_handler.aggregate_bancor_v3_trades(
-            calculated_trade_instructions
-        )
-        flashloan_struct = tx_route_handler.generate_flashloan_struct(
-            trade_instructions_objects=calculated_trade_instructions)
+        tx_route_handler.aggregate_bancor_v3_trades(trade_instructions)
+        flashloan_struct = tx_route_handler.generate_flashloan_struct(trade_instructions)
 
-        # Get the flashloan token
-        fl_token = calculated_trade_instructions[0].tknin_address
-        fl_token_symbol = calculated_trade_instructions[0].tknin_symbol
-
-        best_profit = flashloan_tkn_profit = tx_route_handler.calculate_trade_profit(
-            calculated_trade_instructions
-        )
-
-        # Calculate the best profit
-        best_profit_fl_token, best_profit_gastkn, best_profit_usd = bot.calculate_profit(
-            CCm, best_profit, fl_token
-        )
-
-        # Log the best profit
-        cfg.logger.info(f"Updated best_profit after calculating exact trade numbers: {num_format(best_profit_gastkn)}")
-
-        # Calculate the arbitrage
-        arb = bot.calculate_arb(
-            arb_mode,
-            best_profit_gastkn,
-            best_profit_usd,
-            flashloan_tkn_profit,
-            calculated_trade_instructions,
-            fl_token_symbol,
-        )
-
-        # Log the arbitrage
-        cfg.logger.info(f"calculated arb: {arb}")
-
-        # Get the flashloan amount
-        flashloan_amount = int(calculated_trade_instructions[0].amtin_wei)
-
-        # Log the flashloan amount
-        cfg.logger.info(f"Flashloan amount: {flashloan_amount}")
-
-        split_trades = split_carbon_trades(cfg, calculated_trade_instructions)
+        split_trades = split_carbon_trades(cfg, trade_instructions)
 
         # Encode the trade instructions
-        encoded_trade_instructions = tx_route_handler.custom_data_encoder(
+        tx_route_handler.custom_data_encoder(
             split_trades
         )
 
@@ -288,12 +221,12 @@ def test_wrap_unwrap_original():
         route_struct = [
             asdict(rs)
             for rs in tx_route_handler.get_route_structs(
-                encoded_trade_instructions, deadline
+                split_trades, deadline
             )
         ]
 
         # Check if the result is None
-        wrap_route_struct = add_wrap_or_unwrap_trades_to_route(cfg, flashloan_struct, route_struct, calculated_trade_instructions)
+        wrap_route_struct = add_wrap_or_unwrap_trades_to_route(cfg, flashloan_struct, route_struct, trade_instructions)
 
         assert flashloan_struct[0]["sourceTokens"][0] == wrap_route_struct[0]["sourceToken"]
         assert flashloan_struct[0]["sourceTokens"][0] == wrap_route_struct[-1]["targetToken"]

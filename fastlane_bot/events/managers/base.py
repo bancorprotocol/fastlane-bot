@@ -85,7 +85,7 @@ class BaseManager:
     tokens: List[Dict[str, str]] = field(default_factory=dict)
     target_tokens: List[str] = field(default_factory=list)
     tenderly_fork_id: str = None
-    pools_to_add_from_contracts: List[Tuple[str, str, Any, str, str]] = field(
+    pools_to_add_from_contracts: List[Any] = field(
         default_factory=list
     )
     exchange_start_blocks: Dict[str, int] = field(default_factory=dict)

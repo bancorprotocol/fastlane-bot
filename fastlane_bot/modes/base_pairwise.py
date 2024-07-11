@@ -8,53 +8,42 @@ Defines the base class for pairwise arbitrage finder modes
 All rights reserved.
 Licensed under MIT.
 """
-import abc
-import itertools
-from typing import List, Tuple, Any, Union
-
-from fastlane_bot.modes.base import ArbitrageFinderBase
+from typing import Any, List, Dict
 from fastlane_bot.tools.cpc import CPCContainer
-
+from fastlane_bot.tools.optimizer import PairOptimizer
+from fastlane_bot.modes.base import ArbitrageFinderBase
 
 class ArbitrageFinderPairwiseBase(ArbitrageFinderBase):
-    """
-    Base class for pairwise arbitrage finder modes
-    """
+    def find_arbitrage(self) -> Dict[List[Any], List[Any]]:
+        arb_opps = []
+        combos = self.get_combos()
 
-    @abc.abstractmethod
-    def find_arbitrage(self, candidates: List[Any] = None, ops: Tuple = None, best_profit: float = 0, profit_src: float = 0) -> Union[List, Tuple]:
-        """
-        see base.py
-        """
-        pass
+        for dst_token, src_token in combos:
+            curves = self.CCm.bypairs(f"{dst_token}/{src_token}").curves
+            if len(curves) < 2:
+                continue
 
-    @staticmethod
-    def get_combos(
-        CCm: CPCContainer, flashloan_tokens: List[str]
-    ) -> Tuple[List[Any], List[Any]]:
-        """
-        Get combos for pairwise arbitrage
+            for curve_combos in self.get_curve_combos(curves):
+                if len(curve_combos) < 2:
+                    continue
 
-        Parameters
-        ----------
-        CCm : CPCContainer
-            Container for all the curves
-        flashloan_tokens : list
-            List of flashloan tokens
+                container = CPCContainer(curve_combos)
+                optimizer = PairOptimizer(container)
+                params = self.get_params(container, [dst_token], src_token)
 
-        Returns
-        -------
-        all_tokens : list
-            List of all tokens
+                try:
+                    optimization = optimizer.optimize(src_token, params=params)
+                except Exception as e:
+                    self.ConfigObj.logger.debug(f"[base_pairwise] {e}")
+                    continue
 
-        """
-        all_tokens = CCm.tokens()
-        flashloan_tokens_intersect = all_tokens.intersection(set(flashloan_tokens))
-        combos = [
-            (tkn0, tkn1)
-            for tkn0, tkn1 in itertools.product(all_tokens, flashloan_tokens_intersect)
-            # tkn1 is always the token being flash loaned
-            # note that the pair is tkn0/tkn1, ie tkn1 is the quote token
-            if tkn0 != tkn1
-        ]
-        return all_tokens, combos
+                trade_instructions_dic = optimization.trade_instructions(optimizer.TIF_DICTS)
+                if trade_instructions_dic is None or len(trade_instructions_dic) < 2:
+                    # Failed to converge
+                    continue
+
+                profit = self.get_profit(src_token, optimization, trade_instructions_dic)
+                if profit is not None:
+                    arb_opps.append({"profit": profit, "src_token": src_token, "trade_instructions_dic": trade_instructions_dic})
+
+        return {"combos": combos, "arb_opps": sorted(arb_opps, key=lambda arb_opp: arb_opp["profit"], reverse=True)}

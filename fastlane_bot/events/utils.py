@@ -655,46 +655,6 @@ def get_loglevel(loglevel: str) -> Any:
     )
 
 
-def get_event_filters(
-    n_jobs: int, mgr: Any, start_block: int, current_block: int
-) -> Any:
-    """
-    Creates event filters for the specified block range.
-
-    Parameters
-    ----------
-    n_jobs : int
-        The number of jobs to run in parallel.
-    mgr : Any
-        The manager object.
-    start_block : int
-        The starting block number of the event filters.
-    current_block : int
-        The current block number of the event filters.
-
-    Returns
-    -------
-    Any
-        A list of event filters.
-    """
-    bancor_pol_events = ["TradingEnabled", "TokenTraded"]
-
-    # Get for exchanges except POL contract
-    by_block_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.create_filter)(fromBlock=start_block, toBlock=current_block)
-        for event in mgr.events
-        if event.__name__ not in bancor_pol_events
-    )
-
-    # Get all events since the beginning of time for Bancor POL contract
-    max_num_events = Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(event.create_filter)(fromBlock=0, toBlock="latest")
-        for event in mgr.events
-        if event.__name__ in bancor_pol_events
-    )
-    return by_block_events + max_num_events
-
-
 def get_all_events(n_jobs: int, event_filters: Any) -> List[Any]:
     """
     Fetches all events using the given event filters.
@@ -918,36 +878,6 @@ def init_bot(mgr: Any) -> CarbonBot:
     return bot
 
 
-def update_pools_from_contracts(
-    mgr: Any,
-    n_jobs: int,
-    rows_to_update: List[int] or List[Hashable],
-    current_block: int = None,
-) -> None:
-    """
-    Updates the pools with the given indices by calling the contracts.
-
-    Parameters
-    ----------
-    mgr : Any
-        The manager object.
-    n_jobs : int
-        The number of jobs to run in parallel.
-    rows_to_update : List[int]
-        A list of rows to update.
-    current_block : int, optional
-        The current block number, by default None
-
-    """
-    Parallel(n_jobs=n_jobs, backend="threading")(
-        delayed(mgr.update)(
-            pool_info=mgr.pool_data[idx],
-            block_number=current_block,
-        )
-        for idx in rows_to_update
-    )
-
-
 def get_cached_events(mgr: Any, logging_path: str) -> List[Any]:
     """
     Gets the cached events.
@@ -981,12 +911,8 @@ def handle_subsequent_iterations(
     arb_mode: str,
     bot: CarbonBot,
     flashloan_tokens: List[str],
-    randomizer: int,
-    run_data_validator: bool,
     target_tokens: List[str] = None,
-    loop_idx: int = 0,
     logging_path: str = None,
-    replay_from_block: int = None,
     tenderly_uri: str = None,
     mgr: Any = None,
     forked_from_block: int = None,
@@ -1002,18 +928,10 @@ def handle_subsequent_iterations(
         The bot object.
     flashloan_tokens : List[str]
         A list of flashloan tokens.
-    randomizer : int
-        The randomizer.
-    run_data_validator : bool
-        Whether to run the data validator.
     target_tokens : List[str], optional
         A list of target tokens, by default None
-    loop_idx : int, optional
-        The loop index, by default 0
     logging_path : str, optional
         The logging path, by default None
-    replay_from_block : int, optional
-        The block number to replay from, by default None
     tenderly_uri : str, optional
         The Tenderly URI, by default None
     mgr : Any
@@ -1022,38 +940,30 @@ def handle_subsequent_iterations(
         The block number to fork from.
 
     """
-    if loop_idx > 0 or replay_from_block:
-        # bot.db.handle_token_key_cleanup()
-        bot.db.remove_unmapped_uniswap_v2_pools()
-        bot.db.remove_zero_liquidity_pools()
-        bot.db.remove_unsupported_exchanges()
-        # bot.db.remove_faulty_token_pools()
-        # bot.db.remove_pools_with_invalid_tokens()
-        # bot.db.ensure_descr_in_pool_data()
+    bot.db.remove_unmapped_uniswap_v2_pools()
+    bot.db.remove_zero_liquidity_pools()
+    bot.db.remove_unsupported_exchanges()
 
-        # Filter the target tokens
-        if target_tokens:
-            bot.db.filter_target_tokens(target_tokens)
+    # Filter the target tokens
+    if target_tokens:
+        bot.db.filter_target_tokens(target_tokens)
 
-        # Log the forked_from_block
-        if forked_from_block:
-            mgr.cfg.logger.info(
-                f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}, replay_from_block {replay_from_block}"
-            )
-            mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-            bot.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-            bot.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
-
-        # Run the bot
-        bot.run(
-            flashloan_tokens=flashloan_tokens,
-            arb_mode=arb_mode,
-            run_data_validator=run_data_validator,
-            randomizer=randomizer,
-            logging_path=logging_path,
-            replay_mode=True if replay_from_block else False,
-            replay_from_block=forked_from_block,
+    # Log the forked_from_block
+    if forked_from_block:
+        mgr.cfg.logger.info(
+            f"[events.utils] Submitting bot.run with forked_from_block: {forked_from_block}"
         )
+        mgr.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+        bot.db.cfg.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+        bot.ConfigObj.w3 = Web3(Web3.HTTPProvider(tenderly_uri))
+
+    # Run the bot
+    bot.run(
+        flashloan_tokens=flashloan_tokens,
+        arb_mode=arb_mode,
+        logging_path=logging_path,
+        replay_from_block=forked_from_block,
+    )
 
 
 def handle_duplicates(mgr: Any):
@@ -1070,55 +980,6 @@ def handle_duplicates(mgr: Any):
     mgr.deduplicate_pool_data()
     cids = [pool["cid"] for pool in mgr.pool_data]
     assert len(cids) == len(set(cids)), "duplicate cid's exist in the pool data"
-
-
-def handle_initial_iteration(
-    backdate_pools: bool,
-    current_block: int,
-    last_block: int,
-    mgr: Any,
-    n_jobs: int,
-    start_block: int,
-):
-    """
-    Handles the initial iteration of the bot.
-
-    Parameters
-    ----------
-    backdate_pools : bool
-        Whether to backdate the pools.
-    current_block : int
-        The current block number.
-    last_block : int
-        The last block number.
-    mgr : Any
-        The manager object.
-    n_jobs : int
-        The number of jobs to run in parallel.
-    start_block : int
-        The starting block number.
-
-    """
-
-    if last_block == 0:
-        non_multicall_rows_to_update = mgr.get_rows_to_update(start_block)
-
-        if backdate_pools:
-            # Remove duplicates
-            non_multicall_rows_to_update = list(set(non_multicall_rows_to_update))
-
-            # Parse the rows to update
-            other_pool_rows = parse_non_multicall_rows_to_update(
-                mgr, non_multicall_rows_to_update
-            )
-
-            for rows in [other_pool_rows]:
-                update_pools_from_contracts(
-                    mgr,
-                    n_jobs=n_jobs,
-                    rows_to_update=rows,
-                    current_block=current_block,
-                )
 
 
 def get_tenderly_events(
@@ -1607,28 +1468,6 @@ def set_network_to_mainnet_if_replay(
         )
 
 
-def append_fork_for_cleanup(forks_to_cleanup: List[str], tenderly_uri: str):
-    """
-    Appends the fork to the forks_to_cleanup list if it is not None.
-
-    Parameters
-    ----------
-    forks_to_cleanup : List[str]
-        The list of forks to cleanup.
-    tenderly_uri : str
-        The tenderly uri.
-
-    Returns
-    -------
-    forks_to_cleanup : List[str]
-        The list of forks to cleanup.
-
-    """
-    if tenderly_uri is not None:
-        forks_to_cleanup.append(tenderly_uri.split("/")[-1])
-    return forks_to_cleanup
-
-
 def delete_tenderly_forks(forks_to_cleanup: List[str], mgr: Any) -> List[str]:
     """
     Deletes the forks that were created on Tenderly.
@@ -1666,6 +1505,7 @@ def delete_tenderly_forks(forks_to_cleanup: List[str], mgr: Any) -> List[str]:
         )
 
     return forks_to_keep
+
 
 def get_current_block(
     last_block: int,
