@@ -22,4 +22,5 @@ class SolidlyV2(SolidlyV2Base):
             "lynex_v2": LynexV2,
             "nile_v2": NileV2,
             "xfai_v0": XFaiV2,
+            "yaka": LynexV2,
         }[kwargs["exchange_name"]](**kwargs)
