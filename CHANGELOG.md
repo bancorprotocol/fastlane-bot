@@ -1,5 +1,13 @@
 # Changelog
 
+## [v3.2.6](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.6) (2024-06-30)
+
+[Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.5...v3.2.6)
+
+Merged pull requests
+
+- update static data & add oku exchange to sei [\#695](https://github.com/bancorprotocol/fastlane-bot/pull/695) ([Lesigh-3100](https://github.com/Lesigh-3100))
+
 ## [v3.2.5](https://github.com/bancorprotocol/fastlane-bot/tree/v3.2.5) (2024-06-19)
 
 [Full Changelog](https://github.com/bancorprotocol/fastlane-bot/compare/v3.2.4...v3.2.5)
