@@ -82,6 +82,7 @@ export WEB3_FANTOM="api_key_here"
 export WEB3_MANTLE="api_key_here"
 export WEB3_LINEA="api_key_here"
 export WEB3_SEI="api_key_here"
+export WEB3_CELO="api_key_here"
 ```
 **Note:** To use the Fantom public RPC, write "public" in place of the API key.
 
