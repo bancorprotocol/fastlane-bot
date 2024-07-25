@@ -277,6 +277,7 @@ class ConfigNetwork(ConfigBase):
     NETWORK_MANTLE = S.NETWORK_MANTLE
     NETWORK_LINEA = S.NETWORK_LINEA
     NETWORK_SEI = S.NETWORK_SEI
+    NETWORK_CELO = S.NETWORK_CELO
 
     # FLAGS
     #######################################################################################
@@ -319,7 +320,9 @@ class ConfigNetwork(ConfigBase):
         elif network == cls.NETWORK_LINEA:
             return _ConfigNetworkLinea(_direct=False)  
         elif network == cls.NETWORK_SEI:
-            return _ConfigNetworkSei(_direct=False)    
+            return _ConfigNetworkSei(_direct=False)
+        elif network == cls.NETWORK_CELO:
+            return _ConfigNetworkCelo(_direct=False)
         elif network == cls.NETWORK_TENDERLY:
             return _ConfigNetworkTenderly(_direct=False)
         else:
@@ -820,6 +823,47 @@ class _ConfigNetworkSei(ConfigNetwork):
     }
     # Add any exchanges unique to the chain here
     CHAIN_SPECIFIC_EXCHANGES = []
+
+class _ConfigNetworkCelo(ConfigNetwork):
+    """
+    Fastlane bot config -- network [Base Mainnet]
+    """
+
+    NETWORK = S.NETWORK_CELO
+    NETWORK_ID = "42220" #
+    NETWORK_NAME = "celo"
+    DEFAULT_PROVIDER = S.PROVIDER_ALCHEMY
+
+    RPC_ENDPOINT = "https://lb.drpc.org/ogrpc?network=celo&dkey="
+    WEB3_ALCHEMY_PROJECT_ID = os.environ.get("WEB3_CELO")
+
+    network_df = get_multichain_addresses(network=NETWORK_NAME)
+    FASTLANE_CONTRACT_ADDRESS = "0x8c05EA305235a67c7095a32Ad4a2Ee2688aDe636"
+    MULTICALL_CONTRACT_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11"
+
+    CARBON_CONTROLLER_ADDRESS = "0x6619871118D144c1c28eC3b23036FC1f0829ed3a"
+    CARBON_CONTROLLER_VOUCHER = "0x5E994Ac7d65d81f51a76e0bB5a236C6fDA8dBF9A"
+
+    NATIVE_GAS_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+    WRAPPED_GAS_TOKEN_ADDRESS = "0x471EcE3750Da237f93B8E339c536989b8978a438"
+    NATIVE_GAS_TOKEN_SYMBOL = "CELO"
+    WRAPPED_GAS_TOKEN_SYMBOL = "WCELO"
+    STABLECOIN_ADDRESS = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C"
+
+    IS_INJECT_POA_MIDDLEWARE = True
+    # No Balancer fork with significant liquidity
+    BALANCER_VAULT_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+    CHAIN_FLASHLOAN_TOKENS = {
+        WRAPPED_GAS_TOKEN_ADDRESS: "WCELO",
+        "0xcebA9300f2b948710d2653dD7B07f33A8B32118C": "USDC",
+    }
+    # Add any exchanges unique to the chain here
+    CHAIN_SPECIFIC_EXCHANGES = []
+
+    TAX_TOKENS = set([
+    ])
+
 
 class _ConfigNetworkTenderly(ConfigNetwork):
     """

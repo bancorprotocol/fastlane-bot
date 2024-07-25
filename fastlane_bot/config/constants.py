@@ -46,4 +46,5 @@ BLOCK_CHUNK_SIZE_MAP = {
     "mantle": 0,
     "linea": 0,
     "sei": 2000,
+    "celo": 0,
 }

@@ -49,6 +49,7 @@ FANTOM = "fantom"
 MANTLE = "mantle"
 LINEA = "linea"
 SEI = "sei"
+CELO = "celo"
 
 coingecko_network_map = {
     "ethereum": "ethereum",
@@ -68,6 +69,7 @@ coingecko_network_map = {
     "kava": "kava",
     "mantle": "mantle",
     "sei": "sei",
+    "celo": "celo"
 }
 
 BLOCK_CHUNK_SIZE_MAP = {
@@ -81,6 +83,7 @@ BLOCK_CHUNK_SIZE_MAP = {
     "mantle": 0,
     "linea": 0,
     "sei": 2000,
+    "celo": 0,
 }
 
 ALCHEMY_KEY_DICT = {
@@ -94,6 +97,7 @@ ALCHEMY_KEY_DICT = {
     "mantle": "WEB3_MANTLE",
     "linea": "WEB3_LINEA",
     "sei": "WEB3_SEI",
+    "celo": "WEB3_CELO",
 }
 
 ALCHEMY_RPC_LIST = {
@@ -107,6 +111,7 @@ ALCHEMY_RPC_LIST = {
     "mantle": "https://rpc.mantle.xyz/",
     "linea": "https://rpc.linea.build/",
     "sei": "https://evm-rpc.sei-apis.com/?x-apikey=",
+    "celo": "https://lb.drpc.org/ogrpc?network=celo&dkey=",
 }
 
 BALANCER_SUBGRAPH_CHAIN_URL = {
@@ -1086,3 +1091,4 @@ def terraform_blockchain(network_name: str):
 #terraform_blockchain(network_name=MANTLE)
 #terraform_blockchain(network_name=LINEA)
 #terraform_blockchain(network_name=SEI)
+#terraform_blockchain(network_name=CELO)

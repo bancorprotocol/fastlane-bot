@@ -852,7 +852,6 @@ class CarbonBot:
             routes=route_struct,
             trade_instructions=split_calculated_trade_instructions,
         )
-
         maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Log the flashloan details
