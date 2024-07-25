@@ -846,17 +846,12 @@ class CarbonBot:
             )
         ]
 
-        # Do not add wrap/unwrap transactions on Celo
-        if self.ConfigObj.NETWORK == "celo":
-            route_struct_processed = route_struct
-        else:
-            route_struct_processed = add_wrap_or_unwrap_trades_to_route(
-                cfg=self.ConfigObj,
-                flashloans=flashloan_struct,
-                routes=route_struct,
-                trade_instructions=split_calculated_trade_instructions,
-            )
-
+        route_struct_processed = add_wrap_or_unwrap_trades_to_route(
+            cfg=self.ConfigObj,
+            flashloans=flashloan_struct,
+            routes=route_struct,
+            trade_instructions=split_calculated_trade_instructions,
+        )
         maximize_last_trade_per_tkn(route_struct=route_struct_processed)
 
         # Log the flashloan details
