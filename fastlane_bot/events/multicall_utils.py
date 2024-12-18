@@ -222,8 +222,6 @@ def extract_params_for_multicall(exchange: str, result: Any, pool_info: Dict, mg
     elif exchange == "bancor_v3":
         pool_balances = result
         params = {
-            "fee": "0.000",
-            "fee_float": 0.000,
             "tkn0_balance": pool_balances[0],
             "tkn1_balance": pool_balances[1],
             "exchange_name": exchange,

@@ -27,6 +27,8 @@ from ..interfaces.subscription import Subscription
 TRADING_LIQUIDITY_UPDATED_TOPIC = "0x6e96dc5343d067ec486a9920e0304c3610ed05c65e45cc029d9b9fe7ecfa7620"
 TOTAL_LIQUIDITY_UPDATED_TOPIC = "0x85a03952f50b8c00b32a521c32094023b64ef0b6d4511f423d44c480a62cb145"
 
+FEE_PPM = 1000000
+
 
 @dataclass
 class BancorV3(Exchange):
@@ -59,7 +61,7 @@ class BancorV3(Exchange):
         ]
 
     async def get_fee(self, address: str, contract: Contract) -> Tuple[str, float]:
-        return "0.000", 0.000
+        return self.fee, self.fee_float
 
     async def get_tkn0(self, address: str, contract: Contract, event: Event) -> str:
         return self.BNT_ADDRESS

@@ -89,8 +89,8 @@ class BancorV3Pool(Pool):
         pool_balances = contract.caller.tradingLiquidity(self.state["tkn1_address"])
 
         params = {
-            "fee": "0.000",
-            "fee_float": 0.000,
+            "fee": self.state["fee"],
+            "fee_float": self.state["fee_float"],
             "tkn0_balance": pool_balances[0],
             "tkn1_balance": pool_balances[1],
             "exchange_name": self.state["exchange_name"],
