@@ -5,7 +5,7 @@
 The Fastlane Bot requires an Ethereum private key. **Your funds are AT RISK when you run the Fastlane Arbitrage Bot**. Read the _Preparation_ section below. The bot is provided as-is, with the authors and the Bprotocol Foundation not liable for any losses.
 
 ## ⚠️ WARNING: Fee Exemption Removed
-The Bancor V3 fee exemption for the Fastlane has been removed. The Fastlane bot, however, assumes it will not pay Bancor V3 fees. As a result, arbitrage trades that include Bancor V3 liquidity pools will always be miscalculated. It is recommended to not include `bancor_v3` in the startup arguments if running the bot on Ethereum. 
+The Bancor V3 fee exemption for the Fastlane has been removed, however, the Fastlane bot assumes it will not pay fees for Bancor V3 trades. As a result, arbitrage trades that include Bancor V3 liquidity pools will always be miscalculated. It is recommended to not include `bancor_v3` in the startup arguments if running the bot on Ethereum. 
 
 ## Overview
 
