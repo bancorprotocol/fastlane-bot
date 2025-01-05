@@ -605,7 +605,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--exchanges",
-        default="carbon_v1,bancor_v3,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
+        default="carbon_v1,bancor_v2,bancor_pol,uniswap_v3,uniswap_v2,sushiswap_v2,balancer,pancakeswap_v2,pancakeswap_v3",
         help="Comma separated external exchanges.",
     )
     parser.add_argument(
