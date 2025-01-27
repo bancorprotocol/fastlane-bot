@@ -24,6 +24,7 @@ NETWORK_SCROLL = "scroll"
 NETWORK_BSC = "binance_smart_chain"
 NETWORK_POLYGON = "polygon"
 NETWORK_POLYGON_ZKEVM = "polygon_zkevm"
+NETWORK_CELO = "celo"
 
 DATABASE_SQLITE = "sqlite"
 DATABASE_POSTGRES = "postgres"
